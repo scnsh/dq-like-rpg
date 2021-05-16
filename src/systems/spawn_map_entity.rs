@@ -6,12 +6,12 @@ use bevy_tilemap::prelude::*;
 
 pub fn spawn_map_entity(
     mut commands: Commands,
-    sprite_handles: Res<SpriteHandles>, // スプライト全体のハンドルとロード状態を管理
+    asset_handles: Res<AssetHandles>, // スプライト全体のハンドルとロード状態を管理
     mut texture_atlases: ResMut<Assets<TextureAtlas>>, // テクスチャアトラス
     // mut textures: ResMut<Assets<Texture>>,
 ){
     // テクスチャは1つと仮定
-    let sprite_handle = sprite_handles.handles[0].clone().typed::<Texture>();
+    let sprite_handle = asset_handles.tilemap.clone();
     // let atlas_texture = textures.get_mut(sprite_handle.clone()).unwrap();
 
     let texture_atlas = TextureAtlas::from_grid(sprite_handle, Vec2::new(16., 16.), 6, 1);

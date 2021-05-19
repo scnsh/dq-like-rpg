@@ -29,23 +29,15 @@ pub fn spawn_map_entity(
                 kind: LayerKind::Dense,
                 ..Default::default()
             },
-            0,
+            render_layer(RenderLayer::MapBackGround),
         )
         .add_layer(
             TilemapLayer {
                 kind: LayerKind::Sparse,
                 ..Default::default()
             },
-            1,
+            render_layer(RenderLayer::MapForeGround),
         )
-        .add_layer(
-            TilemapLayer {
-                kind: LayerKind::Sparse,
-                ..Default::default()
-            },
-            2,
-        )
-        // .z_layers(3) // レイヤー数
         .texture_atlas(atlas_handle)
         .finish()
         .unwrap();

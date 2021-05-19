@@ -17,7 +17,7 @@ pub fn spawn_player(
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
     let position = Position { x: 0, y: 0 };
-    let transform = position_to_translation(&map, &position, 10.0);
+    let transform = position_to_translation(&map, &position, render_layer(RenderLayer::Player) as f32);
     commands
         .spawn_bundle(SpriteSheetBundle{
             texture_atlas: texture_atlas_handle,

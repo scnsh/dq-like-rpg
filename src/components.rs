@@ -5,6 +5,24 @@ use bevy::{
 use std::fmt;
 use std::fmt::Display;
 
+#[derive(Clone, Copy)]
+pub enum RenderLayer {
+    MapBackGround, // マップの背景
+    MapForeGround, // マップの前景
+    Player,
+    BattleBackGround, // バトルの背景
+    BattleForeGround, // バトルの背景
+}
+pub fn render_layer(layer: RenderLayer) -> usize {
+    match layer {
+        RenderLayer::MapBackGround => 0,
+        RenderLayer::MapForeGround => 1,
+        RenderLayer::Player => 2,
+        RenderLayer::BattleBackGround => 3,
+        RenderLayer::BattleForeGround => 4,
+    }
+}
+
 #[derive(Default, Copy, Clone, PartialEq)]
 pub struct Position {
     pub x: i32,
@@ -13,13 +31,13 @@ pub struct Position {
 
 pub fn position_to_translation(
     map: &Res<Map>,
-    position: &Position,
+    position:  &Position,
     z: f32,
 ) -> Transform {
     Transform::from_translation(Vec3::new(
         (position.x as f32 - 1.) / 2. * map.tile_size,
         (-(position.y as f32) - 1.) / 2. * map.tile_size,
-         z,
+        z,
     ))
 }
 
@@ -27,10 +45,21 @@ pub struct Player;
 
 pub struct MapCamera;
 
+pub struct BattleCamera;
+
 // タイトル画面UIのルート
 pub struct UiTitleRoot;
 
-// タイトル画面UIのルート
+// ゲーム画面のUIのルート
+pub struct UiRoot;
+
+// バトル画面のUIのルート
+pub struct UiBattle;
+
+// バトル画面のUIのルート
+pub struct UiBattleInventoryRoot;
+
+// ステータス画面のテキスト
 pub struct UiStatusText;
 
 // プレイヤーのステータス
@@ -79,18 +108,21 @@ pub enum MoveDirection {
     Right,
 }
 
-#[derive(Default)]
-pub struct Render {
-    pub sprite_index: usize,
-    pub z_order: usize,
-}
+
+// #[derive(Default)]
+// pub struct Render {
+//     pub sprite_index: usize,
+//     pub z_order: usize,
+// }
 
 // スプライトのハンドル集合
 // 全てのスプライトのロードが終わったかを確認する
 #[derive(Default, Clone)]
 pub struct AssetHandles {
     pub tilemap: Handle<Texture>,
-    pub player: Handle<Texture>
+    pub player: Handle<Texture>,
+    pub battle_background: Handle<Texture>,
+    pub enemy_0: Handle<Texture>,
     // pub atlas_loaded: bool,
 }
 

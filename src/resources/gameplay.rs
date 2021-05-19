@@ -5,7 +5,7 @@ pub enum GameState {
     Loading,
     Generating,
     MapView,
-    // BattleView,
+    BattleView,
     // GameOver,
 }
 

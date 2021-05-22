@@ -23,7 +23,7 @@ pub fn render_layer(layer: RenderLayer) -> usize {
     }
 }
 
-#[derive(Default, Copy, Clone, PartialEq)]
+#[derive(Default, Copy, Clone, PartialEq, Debug)]
 pub struct Position {
     pub x: i32,
     pub y: i32,
@@ -35,8 +35,8 @@ pub fn position_to_translation(
     z: f32,
 ) -> Transform {
     Transform::from_translation(Vec3::new(
-        (position.x as f32 - 1.) / 2. * map.tile_size,
-        (-(position.y as f32) - 1.) / 2. * map.tile_size,
+        (position.x as f32 + 1. / 2.)  * map.tile_size,
+        (position.y as f32 + 1. / 2.) * map.tile_size,
         z,
     ))
 }
@@ -62,8 +62,9 @@ pub struct UiBattleInventoryRoot;
 // ステータス画面のテキスト
 pub struct UiStatusText;
 
-// プレイヤーのステータス
-pub struct PlayerStatus {
+// キャラクターのステータス
+pub struct CharacterStatus {
+    pub name: String,
     pub lv: i32,
     pub exp: i32,
     pub hp_current: i32,
@@ -74,9 +75,10 @@ pub struct PlayerStatus {
     pub defence: i32,
 }
 
-impl Default for PlayerStatus {
+impl Default for CharacterStatus {
     fn default() -> Self {
-        PlayerStatus{
+        CharacterStatus {
+            name: "You".to_string(),
             lv: 1,
             exp: 0,
             hp_current: 100,
@@ -89,7 +91,7 @@ impl Default for PlayerStatus {
     }
 }
 
-impl Display for PlayerStatus {
+impl Display for CharacterStatus {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "Lv {0:>2} Exp {1:>3}\n\
                      HP {2:>3} / {3:>3}\n\
@@ -108,7 +110,6 @@ pub enum MoveDirection {
     Right,
 }
 
-
 // #[derive(Default)]
 // pub struct Render {
 //     pub sprite_index: usize,
@@ -122,7 +123,16 @@ pub struct AssetHandles {
     pub tilemap: Handle<Texture>,
     pub player: Handle<Texture>,
     pub battle_background: Handle<Texture>,
-    pub enemy_0: Handle<Texture>,
+    pub enemies: Vec<Handle<Texture>>,
     // pub atlas_loaded: bool,
 }
 
+// マップフィールドの属性
+pub enum MapField {
+    Grass = 0,
+    Forest,
+    Mountain,
+    Water,
+    Town,
+    Castle
+}

@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use bevy_tilemap::Tilemap;
 
 #[derive(Default)]
 pub struct Map {

@@ -1,4 +1,5 @@
 use crate::components::*;
+use crate::resources::*;
 use bevy::prelude::*;
 
 pub fn setup(
@@ -17,5 +18,9 @@ pub fn setup(
     asset_handles.battle_background = asset_server.load("images/battle/background.png").clone();
 
     // 敵のtextureを読み込む
-    asset_handles.enemy_0 = asset_server.load("images/enemies/bird.png").clone();
+    asset_handles.enemies = Vec::new();
+    asset_handles.enemies.push(asset_server.load("images/enemies/goblin.png").clone());
+    asset_handles.enemies.push(asset_server.load("images/enemies/elf.png").clone());
+    asset_handles.enemies.push(asset_server.load("images/enemies/bird.png").clone());
+    asset_handles.enemies.push(asset_server.load("images/enemies/boss.png").clone());
 }

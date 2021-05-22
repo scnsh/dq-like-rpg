@@ -4,11 +4,11 @@ use bevy::prelude::*;
 use bevy_tilemap::prelude::*;
 
 use rand::Rng;
+use crate::components::MapField;
 
 pub fn generate_map(
     // mut commands: Commands,
     // assert_server: Res<AssetServer>,
-    mut game_state: ResMut<State<GameState>>,
     // mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut map: ResMut<Map>,
     mut tilemap_query: Query<&mut Tilemap>,
@@ -32,7 +32,7 @@ pub fn generate_map(
                 // 小さい方が他よりも後ろにレンダリングされ, 0 は 最後尾 で 背景に使うのが最適
                 let tile = Tile {
                     point: (x, y), // tileの座標
-                    sprite_index: 0, // grassのindex
+                    sprite_index: MapField::Grass as usize, // grassのindex
                     ..Default::default()
                 };
                 tiles.push(tile)
@@ -47,14 +47,14 @@ pub fn generate_map(
             // マップ上部
             tiles.push(Tile {
                 point: tile_lower,
-                sprite_index: 3, // water
+                sprite_index: MapField::Water as usize,
                 sprite_order: 1,
                 ..Default::default()
             });
             // マップ下部
             tiles.push(Tile {
                 point: tile_upper,
-                sprite_index: 3, // water
+                sprite_index: MapField::Water as usize,
                 sprite_order: 1,
                 ..Default::default()
             });
@@ -69,14 +69,14 @@ pub fn generate_map(
             // マップ左端
             tiles.push(Tile {
                 point: tile_left,
-                sprite_index: 3,  // water,
+                sprite_index: MapField::Water as usize,
                 sprite_order: 1,
                 ..Default::default()
             });
             // マップ右端
             tiles.push(Tile {
                 point: tile_right,
-                sprite_index: 3, // water,
+                sprite_index: MapField::Water as usize,
                 sprite_order: 1,
                 ..Default::default()
             });
@@ -96,7 +96,7 @@ pub fn generate_map(
             if coord != (0, 0, 0) {
                 tiles.push(Tile {
                     point: (x, y),
-                    sprite_index: 3, // water_index,
+                    sprite_index: MapField::Water as usize,
                     ..Default::default()
                 });
                 map.collisions.insert((x, y));
@@ -112,14 +112,14 @@ pub fn generate_map(
             if rng.gen_bool(0.5) {
                 tiles.push(Tile {
                     point: (x, y),
-                    sprite_index: 2, // mountain_index,
+                    sprite_index: MapField::Mountain as usize,
                     sprite_order: 1,
                     ..Default::default()
                 });
             } else {
                 tiles.push(Tile {
                     point: (x, y),
-                    sprite_index: 1, // forest,
+                    sprite_index: MapField::Forest as usize,
                     sprite_order: 1,
                     ..Default::default()
                 });
@@ -136,7 +136,4 @@ pub fn generate_map(
         // ワールドに追加
         tilemap.spawn_chunk((0, 0)).unwrap();
     }
-
-    // 次の画面に遷移する
-    game_state.set(GameState::MapView).unwrap();
 }

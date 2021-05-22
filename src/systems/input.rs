@@ -7,7 +7,7 @@ pub fn input(
     _map: Res<Map>,
     mut state: ResMut<State<GameState>>,
     mut player_camera_queries: QuerySet<(
-        Query<(&mut PlayerStatus, &Player, &mut Position)>,
+        Query<(&mut CharacterStatus, &Player, &mut Position)>,
         Query<(&MapCamera, &mut Position)>,
     )>,
 ){
@@ -35,19 +35,19 @@ pub fn input(
             // プレイヤーの位置を更新
             for (_player_status, _player, mut position) in player_camera_queries.q0_mut().iter_mut() {
                 match direction {
-                    MoveDirection::Up => position.y -= 2,
-                    MoveDirection::Down => position.y += 2,
-                    MoveDirection::Left => position.x -= 2,
-                    MoveDirection::Right => position.x += 2,
+                    MoveDirection::Up => position.y += 1,
+                    MoveDirection::Down => position.y -= 1,
+                    MoveDirection::Left => position.x -= 1,
+                    MoveDirection::Right => position.x += 1,
                 }
             }
             // マップ上のカメラの位置を更新
             for (_map_camera, mut position) in player_camera_queries.q1_mut().iter_mut() {
                 match direction {
-                    MoveDirection::Up => position.y -= 2,
-                    MoveDirection::Down => position.y += 2,
-                    MoveDirection::Left => position.x -= 2,
-                    MoveDirection::Right => position.x += 2,
+                    MoveDirection::Up => position.y += 1,
+                    MoveDirection::Down => position.y -= 1,
+                    MoveDirection::Left => position.x -= 1,
+                    MoveDirection::Right => position.x += 1,
                 }
             }
         }

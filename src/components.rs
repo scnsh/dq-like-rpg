@@ -41,6 +41,16 @@ pub fn position_to_translation(
     ))
 }
 
+pub fn position_to_field(
+    map: &Res<Map>,
+    point: &(i32, i32),
+) -> MapField {
+    match map.fields.get(point){
+        Some(field) => field.clone(),
+        _ => panic!()
+    }
+}
+
 pub struct Player;
 
 pub struct MapCamera;
@@ -128,6 +138,7 @@ pub struct AssetHandles {
 }
 
 // マップフィールドの属性
+#[derive(Clone)]
 pub enum MapField {
     Grass = 0,
     Forest,

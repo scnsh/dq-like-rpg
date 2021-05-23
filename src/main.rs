@@ -16,9 +16,11 @@ use bevy::{
     window::WindowMode,
 };
 use bevy_tilemap::prelude::*;
+use crate::events::GameEvent;
 
 fn main() {
     App::build()
+        .add_event::<GameEvent>()
         .insert_resource(WindowDescriptor {
             title: "RPG".to_string(),
             width: 1024.,
@@ -80,6 +82,7 @@ fn main() {
                 .with_system(systems::animate_sprite_system.system())
                 .with_system(systems::translation.system())
                 .with_system(systems::update_status_ui.system())
+                .with_system(systems::event_listener.system())
         )
         .add_system_set(
             SystemSet::on_enter(GameState::BattleView)

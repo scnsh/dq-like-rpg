@@ -5,6 +5,7 @@ use bevy_tilemap::prelude::*;
 
 use rand::Rng;
 use crate::components::MapField;
+use std::collections::HashMap;
 
 pub fn generate_map(
     // mut commands: Commands,
@@ -24,18 +25,21 @@ pub fn generate_map(
 
         // ワールド全体をgrassで埋める
         let mut tiles = Vec::new();
+        map.fields = HashMap::with_capacity((chunk_width * chunk_height) as usize);
         for y in 0..chunk_height {
             for x in 0..chunk_width {
-                let y = y - chunk_height / 2; // -chunk_height/2 < y < chunk_height/2
-                let x = x - chunk_width / 2; // -chunk_width/2 < y < chunk_width/2
+                // -chunk_width/2 < x < chunk_width/2,  -chunk_height/2 < y < chunk_height/2
+                let pos = (x - chunk_width / 2,
+                                    y - chunk_height / 2); // -chunk_height/2 < y < chunk_height/2
                 // デフォルトの tile set の z-order は 0
                 // 小さい方が他よりも後ろにレンダリングされ, 0 は 最後尾 で 背景に使うのが最適
                 let tile = Tile {
-                    point: (x, y), // tileの座標
+                    point: pos, // tileの座標
                     sprite_index: MapField::Grass as usize, // grassのindex
                     ..Default::default()
                 };
-                tiles.push(tile)
+                tiles.push(tile);
+                map.fields.insert(pos, MapField::Grass);
             }
         }
 
@@ -61,6 +65,8 @@ pub fn generate_map(
             // 通れない場所として登録
             map.collisions.insert(tile_lower);
             map.collisions.insert(tile_upper);
+            map.fields.insert(tile_lower, MapField::Water);
+            map.fields.insert(tile_upper, MapField::Water);
         }
         for y in 0..chunk_height {
             let y = y - &chunk_height / 2;
@@ -83,6 +89,8 @@ pub fn generate_map(
             // 通れない場所として登録
             map.collisions.insert(tile_left);
             map.collisions.insert(tile_right);
+            map.fields.insert(tile_left, MapField::Water);
+            map.fields.insert(tile_right, MapField::Water);
         }
         // ランダムに通行不可領域を追加する
         // 5% に設定
@@ -100,6 +108,7 @@ pub fn generate_map(
                     ..Default::default()
                 });
                 map.collisions.insert((x, y));
+                map.fields.insert((x, y), MapField::Water);
             }
         }
         // 他の地形を追加する
@@ -116,6 +125,7 @@ pub fn generate_map(
                     sprite_order: 1,
                     ..Default::default()
                 });
+                map.fields.insert((x, y), MapField::Mountain);
             } else {
                 tiles.push(Tile {
                     point: (x, y),
@@ -123,6 +133,7 @@ pub fn generate_map(
                     sprite_order: 1,
                     ..Default::default()
                 });
+                map.fields.insert((x, y), MapField::Forest);
             }
         }
 

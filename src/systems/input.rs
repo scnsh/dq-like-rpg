@@ -1,15 +1,16 @@
 use bevy::prelude::*;
 use crate::resources::*;
 use crate::components::*;
+use bevy::app::Events;
+use crate::events::GameEvent;
 
 pub fn input(
     mut keyboard_input: ResMut<Input<KeyCode>>,
     _map: Res<Map>,
     mut state: ResMut<State<GameState>>,
-    mut player_camera_queries: QuerySet<(
-        Query<(&mut CharacterStatus, &Player, &mut Position)>,
-        Query<(&MapCamera, &mut Position)>,
-    )>,
+    mut events: EventWriter<GameEvent>,
+    mut player_query: Query<(&mut CharacterStatus, &Player)>,
+    mut player_camera_query: Query<(&MapCamera, &mut Position)>,
 ){
     // // プレイヤー操作中以外は終了
     // if state != GameState::MapView {
@@ -33,21 +34,19 @@ pub fn input(
     {
         if let Some(direction) = direction {
             // プレイヤーの位置を更新
-            for (_player_status, _player, mut position) in player_camera_queries.q0_mut().iter_mut() {
+            for (_player_camera, mut position) in player_camera_query.iter_mut() {
+                let mut new_position = (position.x as i32, position.y as i32);
                 match direction {
-                    MoveDirection::Up => position.y += 1,
-                    MoveDirection::Down => position.y -= 1,
-                    MoveDirection::Left => position.x -= 1,
-                    MoveDirection::Right => position.x += 1,
+                    MoveDirection::Up => new_position.1 += 1,
+                    MoveDirection::Down => new_position.1 -= 1,
+                    MoveDirection::Left => new_position.0 -= 1,
+                    MoveDirection::Right => new_position.0 += 1,
                 }
-            }
-            // マップ上のカメラの位置を更新
-            for (_map_camera, mut position) in player_camera_queries.q1_mut().iter_mut() {
-                match direction {
-                    MoveDirection::Up => position.y += 1,
-                    MoveDirection::Down => position.y -= 1,
-                    MoveDirection::Left => position.x -= 1,
-                    MoveDirection::Right => position.x += 1,
+                if !_map.collisions.contains(&new_position) {
+                    position.x = new_position.0;
+                    position.y = new_position.1;
+                    // events.send(GameEvent::PlayerMoved);
+                    break;
                 }
             }
         }
@@ -55,7 +54,7 @@ pub fn input(
 
     // デバッグ機能
     if keyboard_input.just_pressed(KeyCode::A){
-        for (mut player_status, _player, mut _position) in player_camera_queries.q0_mut().iter_mut() {
+        for (mut player_status, _player) in player_query.iter_mut() {
             player_status.hp_current -= 10;
         }
     }

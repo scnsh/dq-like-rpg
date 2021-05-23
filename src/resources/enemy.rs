@@ -1,4 +1,4 @@
-use crate::components::CharacterStatus;
+use crate::components::{CharacterStatus, MapField};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Enemy {
@@ -6,6 +6,9 @@ pub enum Enemy {
     Elf,
     Bird,
     Boss,
+}
+impl Default for Enemy {
+    fn default() -> Self { Enemy::Goblin }
 }
 
 pub fn create_enemy(enemy: Enemy) -> CharacterStatus{
@@ -54,5 +57,17 @@ pub fn create_enemy(enemy: Enemy) -> CharacterStatus{
             attack: 100,
             defence: 100,
         }
+    }
+}
+
+pub fn field_to_enemy(
+    field: MapField,
+) -> Enemy {
+    match field {
+        MapField::Grass => Enemy::Goblin,
+        MapField::Forest => Enemy::Elf,
+        MapField::Mountain => Enemy::Bird,
+        MapField::Castle => Enemy::Boss,
+        _ => panic!()
     }
 }

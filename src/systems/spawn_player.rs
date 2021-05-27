@@ -29,6 +29,7 @@ pub fn spawn_player(
             .insert(RenderLayers::layer(0))
             .insert(Player)
             .insert(CharacterStatus::default())
+            .insert(Inventory::default())
             // .insert(position)
             .insert(Timer::from_seconds(0.25, true))
             .id();

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::camera::RenderLayers;
 use crate::events::*;
-use crate::components::{BattleCamera, Position, render_layer, RenderLayer, AssetHandles, Player, position_to_translation, UiBattle, CharacterStatus, MapField, position_to_field, MapCamera};
+use crate::components::{BattleCamera, Position, render_layer, RenderLayer, AssetHandles, Player, position_to_translation, UiBattle, CharacterStatus, MapField, position_to_field, MapCamera, UiStatusEnemyText, UiMap};
 use crate::resources::{Battle, create_enemy, Enemy, field_to_enemy, Map};
 use core::cmp;
 use bevy::render::renderer::RenderResource;
@@ -17,8 +17,11 @@ pub fn setup_battle(
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut player_camera_query: Query<(&MapCamera, &Transform, &Position)>,
     mut windows: ResMut<Windows>,
-    mut ui_battle_query: Query<(Entity, &mut Visible), (With<UiBattle>)>,
-    // mut tilemap_query: Query<&mut Tilemap>,
+    mut ui_queries: QuerySet<(
+        Query<(Entity, &mut Visible), (With<UiBattle>)>,
+        Query<(Entity, &mut Visible), (With<UiMap>)>,
+    )>,
+    mut status_query: Query<&mut Text, With<UiStatusEnemyText>>
 ){
     // 参考
     // https://github.com/StarArawn/bevy_roguelike_prototype/blob/main/src/game/gameplay/scenes/battle.rs
@@ -43,6 +46,7 @@ pub fn setup_battle(
     if let Some(sprite) = asset_handles.enemies.get(battle.enemy as usize) {
         let enemy_sprite = sprite;
         let background = asset_handles.battle_background.clone();
+        let enemy_status = create_enemy(battle.enemy);
 
         // 敵の表示ウインドウの中心位置オフセットと表示のスケールを求める
         let window = windows.get_primary_mut().unwrap();
@@ -95,15 +99,27 @@ pub fn setup_battle(
                     },
                     ..Default::default()
                 })
-                    .insert(create_enemy(battle.enemy));
+                    .insert(enemy_status.clone());
             }).id();
 
         // battle用のコンポーネントを保持
         battle.entity = Some(battle_entity);
 
         // 戦闘用のUIを表示するように変更
-        for (_entity, mut visible) in ui_battle_query.iter_mut() {
+        for (_entity, mut visible) in ui_queries.q0_mut().iter_mut(){
             visible.is_visible = true;
+        }
+        // Map用のUIを非表示するように変更
+        for (_entity, mut visible) in ui_queries.q1_mut().iter_mut(){
+            visible.is_visible = false;
+        }
+
+        // バトルウインドウに表示するStatusの初期値を設定
+        for mut text in status_query.iter_mut(){
+            text.sections[0].value = format!("{0} Lv {1:>2} HP {2:>3} / {3:>3} AT {4:>3} DF {5:>3}",
+                                             enemy_status.name, enemy_status.lv,
+                                             enemy_status.hp_current, enemy_status.hp_max,
+                                             enemy_status.attack, enemy_status.defence);
         }
     }
 }
@@ -111,10 +127,18 @@ pub fn setup_battle(
 pub fn cleanup_battle_view(
     mut commands: Commands,
     battle: Res<Battle>,
-    mut ui_battle_query: Query<(Entity, &mut Visible), (With<UiBattle>)>
+    mut ui_queries: QuerySet<(
+        Query<(Entity, &mut Visible), (With<UiBattle>)>,
+        Query<(Entity, &mut Visible), (With<UiMap>)>,
+    )>,
 ){
     commands.entity(battle.entity.unwrap()).despawn_recursive();
-    for (_entity, mut visible) in ui_battle_query.iter_mut() {
+    // 戦闘用のUIを非表示するように変更
+    for (_entity, mut visible) in ui_queries.q0_mut().iter_mut(){
         visible.is_visible = false;
+    }
+    // Map用のUIを表示するように変更
+    for (_entity, mut visible) in ui_queries.q1_mut().iter_mut(){
+        visible.is_visible = true;
     }
 }

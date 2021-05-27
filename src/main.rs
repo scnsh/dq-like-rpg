@@ -33,6 +33,7 @@ fn main() {
         .init_resource::<AssetHandles>()
         .init_resource::<GameState>()
         .init_resource::<Map>()
+        .init_resource::<Inventory>()
         .init_resource::<Battle>()
         .add_plugins(DefaultPlugins)
         .add_plugins(TilemapDefaultPlugins) // TileMap用のデフォルトプラグイン
@@ -87,6 +88,11 @@ fn main() {
         .add_system_set(
             SystemSet::on_enter(GameState::BattleView)
                 .with_system(systems::setup_battle.system())
+        )
+        .add_system_set(
+            SystemSet::on_update(GameState::BattleView)
+                .with_system(systems::update_enemy_status_ui.system())
+                .with_system(systems::update_inventory_ui.system())
         )
         .add_system_set(
             SystemSet::on_exit(GameState::BattleView)

@@ -63,16 +63,21 @@ pub struct UiTitleRoot;
 // ゲーム画面のUIのルート
 pub struct UiRoot;
 
-// バトル画面のUIのルート
+// バトル画面のUIに使うエンティティ
 pub struct UiBattle;
 
-// バトル画面のUIのルート
-pub struct UiBattleInventoryRoot;
+// マップ画面のUIのルート
+pub struct UiMap;
 
 // ステータス画面のテキスト
-pub struct UiStatusText;
+pub struct UiStatusPlayerText;
+// 敵画面のテキスト
+pub struct UiStatusEnemyText;
+// インベントリ画面のテキスト
+pub struct UiStatusInventoryText;
 
 // キャラクターのステータス
+#[derive(Clone)]
 pub struct CharacterStatus {
     pub name: String,
     pub lv: i32,
@@ -146,4 +151,42 @@ pub enum MapField {
     Water,
     Town,
     Castle
+}
+
+// 持ち物
+pub struct Inventory{
+    pub items: Vec<Item>,
+    pub selected_index: i32
+}
+impl Default for Inventory {
+    fn default() -> Self { Inventory {items: vec![Item::Sword], selected_index: 0 }}
+}
+impl Display for Inventory {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "Items:\n{0}", self.items.iter().map(|s| format!("  {}", s)).collect::<Vec<_>>().join("\n"))
+    }
+}
+impl Inventory {
+    pub fn ui_text(&self) -> String {
+        let mut ret = String::new();
+        for (i, s) in self.items.iter().enumerate(){
+            if i as i32 == self.selected_index {
+                ret.push_str(&format!("> {0}\n", s));
+            }
+            else{
+                ret.push_str(&format!("  {0}\n", s));
+            }
+        }
+        ret
+        // formart!("{0}", self.items.iter().map(|s| format!("> {}", s)).collect::<Vec<_>>().join("\n"))
+    }
+    pub fn add_item(&mut self, item: Item){
+        self.items.push(item)
+    }
+    pub fn increment_index(&mut self){
+        self.selected_index = (&self.selected_index + 1).clamp(0, self.items.len() as i32);
+    }
+    pub fn decrement_index(&mut self){
+        self.selected_index = (&self.selected_index - 1).clamp(0, self.items.len() as i32);
+    }
 }

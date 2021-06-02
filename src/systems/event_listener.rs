@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::events::GameEvent;
-use crate::components::{Position, Player, MapCamera, position_to_field};
-use crate::resources::{Map, field_to_enemy, GameState, Battle};
+use crate::components::{Position, Player, MapCamera, position_to_field, UiEventText};
+use crate::resources::{Map, field_to_enemy, GameState, Battle, RunState};
 use rand::Rng;
 
 // カメラを追従させる
@@ -15,6 +15,8 @@ pub fn event_listener(
     map: Res<Map>,
     mut state: ResMut<State<GameState>>,
     mut battle: ResMut<Battle>,
+    mut status_query: Query<&mut UiEventText>,
+    mut runstate: ResMut<RunState>
 ){
     // let mut new_events = Vec::new();
 
@@ -40,9 +42,19 @@ pub fn event_listener(
                 // }
             },
             GameEvent::EnemyEncountered(enemy) => {
-                battle.enemy = *enemy;
-                state.set(GameState::BattleView).unwrap();
+                // battle.enemy = *enemy;
+                // state.set(GameState::Battle).unwrap();
+                // for mut ui_text in status_query.iter_mut() {
+                //     ui_text.event = GameEvent::EnemyEncountered(battle.enemy);
+                // }
+                runstate.event = Option::from(GameEvent::EnemyEncountered(enemy.clone()));
+                state.set(GameState::Event).unwrap();
             },
+            GameEvent::TownArrived => {
+                // TODO: Town到着の効果を反映させる
+                runstate.event = Option::from(GameEvent::TownArrived);
+                state.set(GameState::Event).unwrap();
+            }
             _ => {}
         }
     }

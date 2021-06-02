@@ -4,6 +4,7 @@ use bevy::{
 };
 use std::fmt;
 use std::fmt::Display;
+use crate::events::GameEvent;
 
 #[derive(Clone, Copy)]
 pub enum RenderLayer {
@@ -66,8 +67,11 @@ pub struct UiRoot;
 // バトル画面のUIに使うエンティティ
 pub struct UiBattle;
 
-// マップ画面のUIのルート
+// マップ画面のUIに使うエンティティ
 pub struct UiMap;
+
+// イベント画面のUIに使うエンティティ
+pub struct UiEvent;
 
 // ステータス画面のテキスト
 pub struct UiStatusPlayerText;
@@ -75,6 +79,8 @@ pub struct UiStatusPlayerText;
 pub struct UiStatusEnemyText;
 // インベントリ画面のテキスト
 pub struct UiStatusInventoryText;
+// イベント画面のテキスト
+pub struct UiEventText;
 
 // キャラクターのステータス
 #[derive(Clone)]
@@ -114,6 +120,16 @@ impl Display for CharacterStatus {
                      AT {6:>3} DF {7:>3}\n",
                self.lv, self.exp, self.hp_current, self.hp_max,
                self.mp_current, self.mp_max, self.attack, self.defence)
+    }
+}
+
+impl CharacterStatus {
+    pub fn enemy_text(&self) -> String {
+        let ret = format!("{0} Lv {1:>2} HP {2:>3} / {3:>3} AT {4:>3} DF {5:>3}",
+                          self.name, self.lv,
+                          self.hp_current, self.hp_max,
+                          self.attack, self.defence);
+        ret
     }
 }
 
@@ -184,9 +200,9 @@ impl Inventory {
         self.items.push(item)
     }
     pub fn increment_index(&mut self){
-        self.selected_index = (&self.selected_index + 1).clamp(0, self.items.len() as i32);
+        self.selected_index = (&self.selected_index + 1).clamp(0, self.items.len() as i32 - 1);
     }
     pub fn decrement_index(&mut self){
-        self.selected_index = (&self.selected_index - 1).clamp(0, self.items.len() as i32);
+        self.selected_index = (&self.selected_index - 1).clamp(0, self.items.len() as i32 - 1);
     }
 }

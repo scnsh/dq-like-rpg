@@ -1,5 +1,6 @@
 use crate::resources::Enemy;
 
+#[derive(Debug)]
 pub enum GameEvent {
     // 戦闘開始のイベント
     EnemyEncountered(Enemy),

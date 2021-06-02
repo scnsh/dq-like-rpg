@@ -17,7 +17,9 @@ pub fn generate_map(
     for mut tilemap in tilemap_query.iter_mut() {
         // `auto_chunk` を builder で実行していないので手動でchunkを追加する必要がある
         // chunk は 1つ
-        tilemap.insert_chunk((0, 0)).unwrap();
+        if !tilemap.contains_chunk((0,0)){
+            tilemap.insert_chunk((0, 0)).unwrap();
+        }
 
         // chunkの縦・横のサイズを取得
         let chunk_width = (tilemap.width().unwrap() * tilemap.chunk_width()) as i32;

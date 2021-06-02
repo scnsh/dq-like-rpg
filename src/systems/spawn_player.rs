@@ -10,6 +10,7 @@ pub fn spawn_player(
     // map: Res<Map>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut camera_query: Query<(Entity, &Transform), (With<MapCamera>)>,
+    mut game_state: ResMut<State<GameState>>,
 ){
     for (camera, transform) in camera_query.iter_mut() {
         // 主人公を追加する
@@ -35,4 +36,8 @@ pub fn spawn_player(
             .id();
         commands.entity(camera).push_children(&[player]);
     }
+
+
+    // 次の画面に遷移する
+    game_state.set(GameState::Map).unwrap();
 }

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use crate::components::*;
+use crate::resources::{ForState, GameState};
 
 pub fn setup_title_ui(
     mut commands: Commands,
@@ -22,7 +23,9 @@ pub fn setup_title_ui(
             material: materials.add(Color::BLACK.into()),
             ..Default::default()
         })
-        .insert(UiTitleRoot)
+        .insert(ForState {
+            states: vec![GameState::Title],
+        })
         .with_children(|parent| {
             // 上部のタイトル
             parent
@@ -38,6 +41,9 @@ pub fn setup_title_ui(
                     },
                     material: materials.add(Color::BLACK.into()),
                     ..Default::default()
+                })
+                .insert(ForState {
+                    states: vec![GameState::Title],
                 })
                 .with_children(|parent| {
                     // テキスト
@@ -58,6 +64,9 @@ pub fn setup_title_ui(
                             Default::default()
                         ),
                         ..Default::default()
+                    })
+                    .insert(ForState {
+                        states: vec![GameState::Title],
                     });
                 });
             parent
@@ -73,6 +82,9 @@ pub fn setup_title_ui(
                     },
                     material: materials.add(Color::BLACK.into()),
                     ..Default::default()
+                })
+                .insert(ForState {
+                    states: vec![GameState::Title],
                 })
                 .with_children(|parent| {
                     // テキスト
@@ -93,17 +105,11 @@ pub fn setup_title_ui(
                             Default::default()
                         ),
                         ..Default::default()
+                    })
+                    .insert(ForState {
+                        states: vec![GameState::Title],
                     });
                 });
 
         });
-}
-
-pub fn cleanup_title_ui(
-    mut commands: Commands,
-    title_query: Query<Entity, With<UiTitleRoot>>
-) {
-    for entity in title_query.iter(){
-        commands.entity(entity).despawn_recursive();
-    }
 }

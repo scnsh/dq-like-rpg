@@ -15,6 +15,7 @@ pub fn translation(
         Query<(&Position), (Changed<Position>, With<MapCamera>)>,
     )>,
     mut events_writer: EventWriter<GameEvent>,
+    enemy_data: Res<EnemyData>,
 ){
     for (mut transform, position) in queries.q0_mut().iter_mut(){
         *transform =
@@ -26,8 +27,8 @@ pub fn translation(
         // TODO: 地形に応じて確率を変えたい
         let mut rng = rand::thread_rng();
         if rng.gen_bool(0.1) {
-            let enemy = field_to_enemy(
-                position_to_field(&map, &(position.x, position.y)));
+            let enemy = enemy_data.field_to_enemy(
+                &position_to_field(&map, &(position.x, position.y)));
             events_writer.send(GameEvent::EnemyEncountered(enemy));
             // battle.enemy = enemy;
             // state.set(GameState::BattleView).unwrap();

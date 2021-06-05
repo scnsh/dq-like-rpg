@@ -159,7 +159,7 @@ pub struct AssetHandles {
 }
 
 // マップフィールドの属性
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq, Hash)]
 pub enum MapField {
     Grass = 0,
     Forest,
@@ -172,37 +172,56 @@ pub enum MapField {
 // 持ち物
 pub struct Inventory{
     pub items: Vec<Item>,
-    pub selected_index: i32
+    pub skills: Vec<Skill>,
+    pub selected_skill_index: usize
 }
 impl Default for Inventory {
-    fn default() -> Self { Inventory {items: vec![Item::Sword], selected_index: 0 }}
+    fn default() -> Self {
+        Inventory {
+            items: Vec::new(),
+            skills: vec![Skill::Sword],
+            selected_skill_index: 0
+        }
+    }
 }
 impl Display for Inventory {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "Items:\n{0}", self.items.iter().map(|s| format!("  {}", s)).collect::<Vec<_>>().join("\n"))
+        write!(fmt, "Items:\n{0}",
+               self.items.iter().map(|s| format!("  {}", s)).collect::<Vec<_>>().join("\n"))
     }
 }
+
 impl Inventory {
-    pub fn ui_text(&self) -> String {
+    pub fn skill_list(&self) -> String {
         let mut ret = String::new();
-        for (i, s) in self.items.iter().enumerate(){
-            if i as i32 == self.selected_index {
-                ret.push_str(&format!("> {0}\n", s));
+        for (i, s) in self.skills.iter().enumerate(){
+            if i == self.selected_skill_index {
+                ret.push_str(&format!("> {:?}\n", s));
             }
             else{
-                ret.push_str(&format!("  {0}\n", s));
+                ret.push_str(&format!("  {:?}\n", s));
             }
         }
         ret
         // formart!("{0}", self.items.iter().map(|s| format!("> {}", s)).collect::<Vec<_>>().join("\n"))
     }
     pub fn add_item(&mut self, item: Item){
-        self.items.push(item)
+        // アイテムをインベントリに追加
+        self.items.push(item);
+        // スキルアイテムはスキルリストにも追加
+        if let Some(skill) = item.can_use(){
+            self.skills.push(skill);
+        }
     }
     pub fn increment_index(&mut self){
-        self.selected_index = (&self.selected_index + 1).clamp(0, self.items.len() as i32 - 1);
+        self.selected_skill_index = (&self.selected_skill_index + 1).clamp(0, self.skills.len() - 1);
     }
     pub fn decrement_index(&mut self){
-        self.selected_index = (&self.selected_index - 1).clamp(0, self.items.len() as i32 - 1);
+        if self.selected_skill_index > 0 {
+            self.selected_skill_index = (&self.selected_skill_index - 1).clamp(0, self.skills.len() - 1);;
+        }
+    }
+    pub fn skill(&self) -> Skill{
+        self.skills[self.selected_skill_index]
     }
 }

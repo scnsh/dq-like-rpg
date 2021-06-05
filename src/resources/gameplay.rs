@@ -47,6 +47,15 @@ impl RunState {
                     GameEvent::TownArrived => {
                         format!("Town\nGet healed up your HP!\nGet a item\n")
                     },
+                    GameEvent::Win => {
+                        format!("You Win!\n")
+                    },
+                    GameEvent::Lose => {
+                        format!("You Lose!\n")
+                    },
+                    GameEvent::WinLast => {
+                        format!("You won the last battle!\nYou saved the kingdom!")
+                    },
                     _ => panic!("unexpected event"),
                 }
             }

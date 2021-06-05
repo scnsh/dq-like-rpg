@@ -1,21 +1,18 @@
 use bevy::prelude::*;
 use crate::events::GameEvent;
-use crate::components::{Position, Player, MapCamera, position_to_field, UiEventText};
-use crate::resources::{Map, field_to_enemy, GameState, Battle, RunState};
+use crate::components::{Position, Player, MapCamera, position_to_field, UiEventText, CharacterStatus, Inventory};
+use crate::resources::{Map, GameState, Battle, RunState, Skill};
 use rand::Rng;
+use crate::systems::attack;
 
 // カメラを追従させる
 pub fn event_listener(
     mut events_reader: EventReader<GameEvent>,
-    // mut events_writer: EventWriter<GameEvent>,
-    // mut queries: QuerySet<(
-    //     Query<&Position, With<Player>>,
-    //     Query<&mut Position, With<MapCamera>>,
-    // )>,
     map: Res<Map>,
     mut state: ResMut<State<GameState>>,
     mut battle: ResMut<Battle>,
-    mut status_query: Query<&mut UiEventText>,
+    mut player_status_query: Query<(&mut CharacterStatus, &Inventory), With<Player>>,
+    mut enemy_status_query: Query<(&mut CharacterStatus, &Skill), Without<Player>>,
     mut runstate: ResMut<RunState>
 ){
     // let mut new_events = Vec::new();
@@ -47,13 +44,31 @@ pub fn event_listener(
                 // for mut ui_text in status_query.iter_mut() {
                 //     ui_text.event = GameEvent::EnemyEncountered(battle.enemy);
                 // }
-                runstate.event = Option::from(GameEvent::EnemyEncountered(enemy.clone()));
+                runstate.event = Option::from(GameEvent::EnemyEncountered(*enemy));
                 state.set(GameState::Event).unwrap();
             },
             GameEvent::TownArrived => {
                 // TODO: Town到着の効果を反映させる
                 runstate.event = Option::from(GameEvent::TownArrived);
                 state.set(GameState::Event).unwrap();
+            }
+            GameEvent::PlayerAttack => {
+                for (mut player_status, inventory) in player_status_query.iter_mut() {
+                    for (mut enemy_status, skill) in enemy_status_query.iter_mut() {
+                        //プレイヤーの攻撃
+                        attack(
+                            &mut player_status,
+                            &mut enemy_status,
+                            inventory.skill()
+                        );
+                        //敵の攻撃
+                        attack(
+                            &mut enemy_status,
+                            &mut player_status,
+                            *skill
+                        );
+                    }
+                }
             }
             _ => {}
         }

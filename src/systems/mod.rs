@@ -15,11 +15,12 @@ mod setup_battle;
 mod event_listener;
 mod setup_event_ui;
 mod state_enter_despawn;
+mod setup_map_ui;
 
 pub use self::{
     setup::*, setup_cameras::*, gamestart_keyboard::*, loading::*,
     spawn_map_entity::*, generate_map::*, spawn_player::*, input::*,
     translation::*, setup_status_ui::*, print_keyboard_event::*, setup_title_ui::*,
     animate_sprite::*, setup_battle::*, event_listener::*, setup_event_ui::*,
-    state_enter_despawn::*,
+    state_enter_despawn::*, setup_map_ui::*,
 };

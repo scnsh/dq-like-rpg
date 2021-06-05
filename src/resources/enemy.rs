@@ -1,4 +1,10 @@
 use crate::components::{CharacterStatus, MapField};
+use std::collections::HashMap;
+use std::iter::FromIterator;
+use std::array::IntoIter;
+use std::fmt::Display;
+use core::fmt;
+use crate::resources::Skill;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Enemy {
@@ -10,64 +16,72 @@ pub enum Enemy {
 impl Default for Enemy {
     fn default() -> Self { Enemy::Goblin }
 }
+impl Display for Enemy {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(self, fmt)
+    }
+}
 
-pub fn create_enemy(enemy: Enemy) -> CharacterStatus{
-    match enemy {
-        Enemy::Goblin => CharacterStatus{
-            name: "Goblin".to_string(),
-            lv: 1,
-            exp: 0,
-            hp_current: 50,
-            hp_max: 50,
-            mp_current: 0,
-            mp_max: 0,
-            attack: 10,
-            defence: 10,
-        },
-        Enemy::Elf => CharacterStatus{
-            name: "Elf".to_string(),
-            lv: 1,
-            exp: 0,
-            hp_current: 100,
-            hp_max: 100,
-            mp_current: 0,
-            mp_max: 0,
-            attack: 30,
-            defence: 30,
-        },
-        Enemy::Bird => CharacterStatus{
-            name: "Bird".to_string(),
-            lv: 1,
-            exp: 0,
-            hp_current: 200,
-            hp_max: 200,
-            mp_current: 0,
-            mp_max: 0,
-            attack: 50,
-            defence: 50,
-        },
-        Enemy::Boss => CharacterStatus{
-            name: "Boss".to_string(),
-            lv: 1,
-            exp: 0,
-            hp_current: 400,
-            hp_max: 400,
-            mp_current: 0,
-            mp_max: 0,
-            attack: 100,
-            defence: 100,
+#[derive(Clone, Copy, Debug)]
+pub struct EnemyStatus {
+    name: Enemy,
+    rate: i32,
+    img: usize,
+    hp: i32,
+    at: i32,
+    df: i32,
+    skl: Skill
+}
+
+pub struct EnemyData {
+    pub data: HashMap<MapField, EnemyStatus>,
+}
+impl Default for EnemyData {
+    fn default() -> Self {
+        EnemyData{
+            data: HashMap::<_, _>::from_iter(IntoIter::new([
+                (MapField::Grass, EnemyStatus{name: Enemy::Goblin, rate: 20, img: 0, hp: 50, at: 10, df: 5, skl: Skill::Sword}),
+                (MapField::Forest, EnemyStatus{name: Enemy::Elf, rate: 10, img: 1, hp: 100, at: 20, df: 10, skl: Skill::Arrow}),
+                (MapField::Mountain, EnemyStatus{name: Enemy::Bird, rate: 5, img: 2, hp: 200, at: 40, df: 30, skl: Skill::Wind}),
+                (MapField::Castle, EnemyStatus{name: Enemy::Boss, rate: 1, img: 3, hp: 999, at: 99, df: 99, skl: Skill::Death}),
+            ]))
         }
     }
 }
 
-pub fn field_to_enemy(
-    field: MapField,
-) -> Enemy {
-    match field {
-        MapField::Grass => Enemy::Goblin,
-        MapField::Forest => Enemy::Elf,
-        MapField::Mountain => Enemy::Bird,
-        MapField::Castle => Enemy::Boss,
-        _ => panic!()
+impl EnemyData {
+    pub fn create(&self, map_field: &MapField, level: i32) -> CharacterStatus{
+        if let &enemy_status = &self.data[map_field] {
+            return CharacterStatus{
+                name: enemy_status.name.to_string(),
+                lv: level,
+                exp: 0,
+                hp_current: (enemy_status.hp as f32 * (0.5 + level as f32 / 2.)) as i32,
+                hp_max: (enemy_status.hp as f32 * (0.5 + level as f32 / 2.)) as i32,
+                mp_current: 0,
+                mp_max: 0,
+                attack: (enemy_status.at as f32 * (0.5 + level as f32 / 2.)) as i32,
+                defence: (enemy_status.df as f32 * (0.5 + level as f32 / 2.)) as i32,
+            }
+        }
+        panic!("unexpected map field.")
+    }
+    pub fn field_to_enemy(&self, map_field: &MapField) -> Enemy {
+        if let &enemy_status = &self.data[map_field] {
+            return enemy_status.name;
+        }
+        panic!("unexpected map field.")
+    }
+    pub fn field_to_enemy_skill(&self, map_field: &MapField) -> Skill {
+        if let &enemy_status = &self.data[map_field] {
+            return enemy_status.skl;
+        }
+        panic!("unexpected map field.")
+    }
+    pub fn image_index(&self, map_field: &MapField) -> usize {
+        if let enemy_status = &self.data[map_field] {
+            return enemy_status.img;
+        }
+        panic!("unexpected map field.")
     }
 }

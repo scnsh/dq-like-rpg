@@ -11,6 +11,18 @@ pub enum GameEvent {
     // プレイヤーが移動
     PlayerMoved,
 
+    // 勝利
+    Win,
+
+    // 敗北
+    Lose,
+
+    // 最終戦勝利
+    WinLast,
+
+    // 攻撃
+    PlayerAttack,
+
     // エンティティが動いた時に実行される
     // EntityMoved(EntityId),
 

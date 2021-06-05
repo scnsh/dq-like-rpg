@@ -13,12 +13,8 @@ pub fn input(
     mut player_camera_query: Query<(&MapCamera, &mut Position)>,
     mut battle: ResMut<Battle>,
     runstate: Res<RunState>,
+    enemy_data: Res<EnemyData>,
 ) {
-    // // プレイヤー操作中以外は終了
-    // if state != GameState::MapView {
-    //     return;
-    // }
-
     // キーボード操作の入力を受け取る
     let direction = if keyboard_input.just_pressed(KeyCode::Up) {
         Some(MoveDirection::Up)
@@ -32,26 +28,62 @@ pub fn input(
         None
     };
 
-    if matches!(state.current(), GameState::Map)
-    {
-        if let Some(direction) = direction {
-            // プレイヤーの位置を更新
-            for (_player_camera, mut position) in player_camera_query.iter_mut() {
-                let mut new_position = (position.x as i32, position.y as i32);
-                match direction {
-                    MoveDirection::Up => new_position.1 += 1,
-                    MoveDirection::Down => new_position.1 -= 1,
-                    MoveDirection::Left => new_position.0 -= 1,
-                    MoveDirection::Right => new_position.0 += 1,
+    // 十字キー操作
+    if let Some(direction) = direction {
+        match state.current() {
+            GameState::Map => {
+                // プレイヤーの位置を更新
+                for (_player_camera, mut position) in player_camera_query.iter_mut() {
+                    let mut new_position = (position.x as i32, position.y as i32);
+                    match direction {
+                        MoveDirection::Up => new_position.1 += 1,
+                        MoveDirection::Down => new_position.1 -= 1,
+                        MoveDirection::Left => new_position.0 -= 1,
+                        MoveDirection::Right => new_position.0 += 1,
+                    }
+                    if !_map.collisions.contains(&new_position) {
+                        position.x = new_position.0;
+                        position.y = new_position.1;
+                        // events.send(GameEvent::PlayerMoved);
+                        break;
+                    }
                 }
-                if !_map.collisions.contains(&new_position) {
-                    position.x = new_position.0;
-                    position.y = new_position.1;
-                    // events.send(GameEvent::PlayerMoved);
-                    break;
+            },
+            GameState::Battle => {
+                // インベントリのカーソル位置を更新
+                for (_player_camera, mut inventory, _player) in player_query.iter_mut() {
+                    match direction {
+                        MoveDirection::Up => inventory.decrement_index(),
+                        MoveDirection::Down => inventory.increment_index(),
+                        _ => info!("unhandled key input"),
+                    }
+                }
+            },
+            _ => info!("unhandled state"),
+        }
+    }
+
+    // 決定ボタン操作
+    if keyboard_input.just_pressed(KeyCode::Return) {
+        match state.current() {
+            GameState::Battle => {
+                events.send(GameEvent::PlayerAttack);
+            }
+            GameState::Event => {
+                let event = runstate.event.as_ref().unwrap();
+                match event {
+                    GameEvent::EnemyEncountered(_enemy) => {
+                        state.set(GameState::Battle).unwrap();
+                    },
+                    GameEvent::TownArrived => {
+                        state.set(GameState::Map).unwrap();
+                    },
+                    _ => panic!("unexpected event"),
                 }
             }
+            _ => info!("unhandled key input"),
         }
+        keyboard_input.reset(KeyCode::Return);
     }
 
     // デバッグ機能
@@ -65,11 +97,11 @@ pub fn input(
         match state.current() {
             GameState::Map => {
                 for (_player_camera, mut position) in player_camera_query.iter_mut() {
-                    let enemy = field_to_enemy(
-                        position_to_field(&_map, &(position.x, position.y)));
+                    let enemy = enemy_data.field_to_enemy(
+                        &position_to_field(&_map, &(position.x, position.y)));
                     battle.enemy = enemy.clone();
                     // state.set(GameState::Battle).unwrap()
-                    events.send(GameEvent::EnemyEncountered(battle.enemy))
+                    events.send(GameEvent::EnemyEncountered(battle.enemy));
                 }
             },
             GameState::Battle => state.set(GameState::Map).unwrap(),
@@ -82,68 +114,19 @@ pub fn input(
         match state.current() {
             GameState::Battle => {
                 for (_player_camera, mut inventory, _player) in player_query.iter_mut() {
-                    inventory.add_item(Item::SpellFire1);
+                    inventory.add_item(Item::SpellFire(1));
                 }
             },
             _ => info!("unhandled key input"),
         }
         keyboard_input.reset(KeyCode::I);
     }
-    if keyboard_input.just_pressed(KeyCode::U) {
-        match state.current() {
-            GameState::Battle => {
-                for (_player_camera, mut inventory, _player) in player_query.iter_mut() {
-                    inventory.decrement_index();
-                }
-            },
-            _ => info!("unhandled key input"),
-        }
-        keyboard_input.reset(KeyCode::U);
-    }
-    if keyboard_input.just_pressed(KeyCode::D) {
-        match state.current() {
-            GameState::Battle => {
-                for (_player_camera, mut inventory, _player) in player_query.iter_mut() {
-                    inventory.increment_index();
-                }
-            },
-            _ => info!("unhandled key input"),
-        }
-        keyboard_input.reset(KeyCode::D);
-    }
 
     if keyboard_input.just_pressed(KeyCode::T) {
         match state.current() {
             GameState::Map => events.send(GameEvent::TownArrived),
-            GameState::Event => {
-                let event = runstate.event.as_ref().unwrap();
-                match event {
-                    GameEvent::EnemyEncountered(enemy) => {
-                        state.set(GameState::Battle).unwrap();
-                    },
-                    GameEvent::TownArrived => {
-                        state.set(GameState::Map).unwrap();
-                    },
-                    _ => panic!("unexpected event"),
-                }
-                // match runstate.event {
-                //     None => panic!("can't convert text from None."),
-                //     Some(event) => {
-                //         match event {
-                //             GameEvent::EnemyEncountered(enemy) => {
-                //                 set(GameState::Battle).unwrap();
-                //             },
-                //             GameEvent::TownArrived => {
-                //                 set(GameState::Map).unwrap();
-                //                 format!("Town\nGet healed up your HP!\nGet a item\n")
-                //             },
-                //             _ => panic!("unexpected event"),
-                //         }
-                //     }
-                // }
-            },
             _ => info!("unhandled key input"),
         }
-        keyboard_input.reset(KeyCode::B);
+        keyboard_input.reset(KeyCode::T);
     }
 }

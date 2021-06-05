@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::events::GameEvent;
 use crate::components::{Position, Player, MapCamera, position_to_field, UiEventText, CharacterStatus, Inventory};
-use crate::resources::{Map, GameState, Battle, RunState, Skill};
+use crate::resources::{Map, GameState, Battle, RunState, Skill, Enemy};
 use rand::Rng;
 use crate::systems::attack;
 
@@ -12,7 +12,7 @@ pub fn event_listener(
     mut state: ResMut<State<GameState>>,
     mut battle: ResMut<Battle>,
     mut player_status_query: Query<(&mut CharacterStatus, &Inventory), With<Player>>,
-    mut enemy_status_query: Query<(&mut CharacterStatus, &Skill), Without<Player>>,
+    mut enemy_status_query: Query<(&mut CharacterStatus, &Skill, &Enemy), Without<Player>>,
     mut runstate: ResMut<RunState>
 ){
     // let mut new_events = Vec::new();
@@ -54,19 +54,37 @@ pub fn event_listener(
             }
             GameEvent::PlayerAttack => {
                 for (mut player_status, inventory) in player_status_query.iter_mut() {
-                    for (mut enemy_status, skill) in enemy_status_query.iter_mut() {
+                    for (mut enemy_status, skill, enemy) in enemy_status_query.iter_mut() {
                         //プレイヤーの攻撃
                         attack(
                             &mut player_status,
                             &mut enemy_status,
                             inventory.skill()
                         );
+                        // 敵のHPが0になったら勝利
+                        if enemy_status.hp_current <= 0 {
+                            if matches!(enemy, Enemy::Boss){
+                                // 最終戦闘に勝利
+                                runstate.event = Option::from(GameEvent::WinLast);
+                                state.set(GameState::Event).unwrap();
+                            }else{
+                                // 経験値を追加する
+                                let levelup = player_status.add_exp(enemy_status.hp_max/10, inventory);
+                                runstate.event = Option::from(GameEvent::Win(levelup));
+                                state.set(GameState::Event).unwrap();
+                            }
+                        }
                         //敵の攻撃
                         attack(
                             &mut enemy_status,
                             &mut player_status,
                             *skill
                         );
+                        // 自分のHPが0になったら敗北
+                        if player_status.hp_current <= 0 {
+                            runstate.event = Option::from(GameEvent::Lose);
+                            state.set(GameState::Event).unwrap();
+                        }
                     }
                 }
             }

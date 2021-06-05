@@ -12,7 +12,7 @@ pub enum GameEvent {
     PlayerMoved,
 
     // 勝利
-    Win,
+    Win(bool),
 
     // 敗北
     Lose,

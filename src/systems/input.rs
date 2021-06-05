@@ -67,17 +67,33 @@ pub fn input(
     if keyboard_input.just_pressed(KeyCode::Return) {
         match state.current() {
             GameState::Battle => {
+                //スキル発動ボタン
                 events.send(GameEvent::PlayerAttack);
             }
             GameState::Event => {
                 let event = runstate.event.as_ref().unwrap();
                 match event {
+                    //バトル画面に遷移
                     GameEvent::EnemyEncountered(_enemy) => {
                         state.set(GameState::Battle).unwrap();
                     },
+                    //マップ画面に遷移
                     GameEvent::TownArrived => {
                         state.set(GameState::Map).unwrap();
                     },
+                    //勝ったのでマップ画面に遷移
+                    GameEvent::Win(levelup) => {
+                        state.set(GameState::Map).unwrap();
+                    }
+                    //負けたのでタイトルに遷移
+                    // TODO: 経験値を更新してマップに戻らせる
+                    GameEvent::Lose => {
+                        state.set(GameState::Title).unwrap();
+                    }
+                    // TODO: タイトルに戻って経験値引き継ぎ要素を入れる
+                    GameEvent::WinLast => {
+                        state.set(GameState::Title).unwrap();
+                    }
                     _ => panic!("unexpected event"),
                 }
             }

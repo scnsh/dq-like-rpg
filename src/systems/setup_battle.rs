@@ -31,6 +31,7 @@ pub fn setup_battle(
     let enemy_status = enemy_data.create(&map_field,
                                          level(player_status.lv,
                                                enemy_data.field_to_enemy(&map_field)));
+    let enemy = enemy_data.field_to_enemy(&map_field);
     let enemy_skill = enemy_data.field_to_enemy_skill(&map_field);
     let enemy_sprite = asset_handles.enemies.get(enemy_data.image_index(&map_field)).unwrap();
     let background = asset_handles.battle_background.clone();
@@ -94,6 +95,7 @@ pub fn setup_battle(
             })
                 .insert(enemy_status.clone())
                 .insert(enemy_skill)
+                .insert(enemy)
                 .insert(ForState {
                     states: vec![GameState::Battle],
                 });

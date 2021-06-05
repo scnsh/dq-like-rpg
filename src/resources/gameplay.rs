@@ -14,7 +14,7 @@ pub enum GameState {
     Map,
     Battle,
     Event,
-    // GameOver,
+    GameClear,
 }
 
 // 初期状態
@@ -47,7 +47,10 @@ impl RunState {
                     GameEvent::TownArrived => {
                         format!("Town\nGet healed up your HP!\nGet a item\n")
                     },
-                    GameEvent::Win => {
+                    GameEvent::Win(levelup) => {
+                        if levelup {
+                            format!("You Win!\nLevel Up!\n")
+                        }
                         format!("You Win!\n")
                     },
                     GameEvent::Lose => {

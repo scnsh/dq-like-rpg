@@ -5,7 +5,8 @@ use bevy_tilemap::prelude::*;
 
 use rand::Rng;
 use crate::components::MapField;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use strum::IntoEnumIterator;
 
 pub fn generate_map(
     // mut commands: Commands,
@@ -27,117 +28,187 @@ pub fn generate_map(
 
         // ワールド全体をgrassで埋める
         let mut tiles = Vec::new();
-        map.fields = HashMap::with_capacity((chunk_width * chunk_height) as usize);
+        let mut fields = HashMap::with_capacity((chunk_width * chunk_height) as usize);
         for y in 0..chunk_height {
             for x in 0..chunk_width {
                 // -chunk_width/2 < x < chunk_width/2,  -chunk_height/2 < y < chunk_height/2
                 let pos = (x - chunk_width / 2,
                                     y - chunk_height / 2); // -chunk_height/2 < y < chunk_height/2
                 // デフォルトの tile set の z-order は 0
-                // 小さい方が他よりも後ろにレンダリングされ, 0 は 最後尾 で 背景に使うのが最適
-                let tile = Tile {
-                    point: pos, // tileの座標
-                    sprite_index: MapField::Grass as usize, // grassのindex
-                    ..Default::default()
-                };
-                tiles.push(tile);
-                map.fields.insert(pos, MapField::Grass);
+                // // 小さい方が他よりも後ろにレンダリングされ, 0 は 最後尾 で 背景に使うのが最適
+                // let tile = Tile {
+                //     point: pos, // tileの座標
+                //     sprite_index: MapField::Grass as usize, // grassのindex
+                //     ..Default::default()
+                // };
+                // tiles.push(tile);
+                fields.insert(pos, MapField::Grass);
             }
         }
 
-        // 水で囲む
-        for x in 0..chunk_width {
-            let x = x - &chunk_width / 2;
-            let tile_lower = (x, -(chunk_height / 2));
-            let tile_upper = (x, chunk_height / 2 - 1);
-            // マップ上部
-            tiles.push(Tile {
-                point: tile_lower,
-                sprite_index: MapField::Water as usize,
-                sprite_order: 1,
-                ..Default::default()
-            });
-            // マップ下部
-            tiles.push(Tile {
-                point: tile_upper,
-                sprite_index: MapField::Water as usize,
-                sprite_order: 1,
-                ..Default::default()
-            });
-            // 通れない場所として登録
-            map.collisions.insert(tile_lower);
-            map.collisions.insert(tile_upper);
-            map.fields.insert(tile_lower, MapField::Water);
-            map.fields.insert(tile_upper, MapField::Water);
-        }
-        for y in 0..chunk_height {
-            let y = y - &chunk_height / 2;
-            let tile_left = (-chunk_width / 2, y);
-            let tile_right = (chunk_width / 2 - 1, y);
-            // マップ左端
-            tiles.push(Tile {
-                point: tile_left,
-                sprite_index: MapField::Water as usize,
-                sprite_order: 1,
-                ..Default::default()
-            });
-            // マップ右端
-            tiles.push(Tile {
-                point: tile_right,
-                sprite_index: MapField::Water as usize,
-                sprite_order: 1,
-                ..Default::default()
-            });
-            // 通れない場所として登録
-            map.collisions.insert(tile_left);
-            map.collisions.insert(tile_right);
-            map.fields.insert(tile_left, MapField::Water);
-            map.fields.insert(tile_right, MapField::Water);
-        }
-        // ランダムに通行不可領域を追加する
-        // 5% に設定
-        let range = (chunk_width * chunk_height) as usize / 20;
+        // 山・森・水を配置する
         let mut rng = rand::thread_rng();
-        for _ in 0..range {
-            // 座標をランダムに選択
-            let x: i32 = rng.gen_range(-chunk_width / 2 + 1, chunk_width / 2 - 1);
-            let y: i32 = rng.gen_range(-chunk_height / 2 + 1, chunk_height / 2 - 1);
-            let coord = (x, y, 0i32);
-            if coord != (0, 0, 0) {
-                tiles.push(Tile {
-                    point: (x, y),
-                    sprite_index: MapField::Water as usize,
-                    ..Default::default()
-                });
-                map.collisions.insert((x, y));
-                map.fields.insert((x, y), MapField::Water);
+        let left = &chunk_width / 2 - 1;
+        let right = -&chunk_width / 2;
+        let top = &chunk_height / 2 - 1;
+        let bottom = -&chunk_height / 2;
+        for y in 0..chunk_height {
+            for x in 0..chunk_width {
+                let pos = (x - chunk_width / 2,
+                           y - chunk_height / 2); // -chunk_height/2 < y < chunk_height/2
+                // 1/60 の確率で山生成開始
+                if rng.gen_bool(1./60.) {
+                    // 山の散布回数
+                    let max = rng.gen_range(10, 60);
+                    for i in 0..max {
+                        // ランダム移動で山を生成
+                        let pos = (
+                            (pos.0 + rng.gen_range(-3, 4)).clamp( -&chunk_width / 2, &chunk_width / 2 - 1),
+                            (pos.1 + rng.gen_range(-3, 4)).clamp( -&chunk_height / 2, &chunk_height / 2 - 1));
+                        fields.insert(pos, MapField::Mountain);
+                    }
+                }
+                // 1/12 で水
+                if rng.gen_bool(1./12.) {
+                    fields.insert(pos, MapField::Water);
+                }
+                // 1/6 で森
+                if rng.gen_bool(1./6.) {
+                    fields.insert(pos, MapField::Forest);
+                }
+
+                // 端は水
+                if pos.0 == left || pos.0 == right {
+                    fields.insert(pos, MapField::Water);
+                }
+                if pos.1 == top || pos.1 == bottom{
+                    fields.insert(pos, MapField::Water);
+                }
             }
         }
-        // 他の地形を追加する
-        // 10%
-        let range = (chunk_width * chunk_height) as usize / 10;
-        for _ in 0..range {
-            let x = rng.gen_range(-chunk_width / 2 + 1, chunk_width / 2 - 1);
-            let y = rng.gen_range(-chunk_height / 2 + 1, chunk_height / 2 - 1);
-            // 50% の確率で山と森で分ける
-            if rng.gen_bool(0.5) {
-                tiles.push(Tile {
-                    point: (x, y),
-                    sprite_index: MapField::Mountain as usize,
-                    sprite_order: 1,
-                    ..Default::default()
-                });
-                map.fields.insert((x, y), MapField::Mountain);
-            } else {
-                tiles.push(Tile {
-                    point: (x, y),
-                    sprite_index: MapField::Forest as usize,
-                    sprite_order: 1,
-                    ..Default::default()
-                });
-                map.fields.insert((x, y), MapField::Forest);
+
+        // ゲーム開始位置付近は平地にする
+        for y in -1..2 {
+            for x in -1..2 {
+                // let pos = (x, y); // -chunk_height/2 < y < chunk_height/2
+                fields.insert((x, y), MapField::Grass);
             }
         }
+
+        // 敵城の生成 マップ周縁(0.8 ~ 1.0、0~0.2の比率)に生成
+        let castle_x = (chunk_width as f32 * rng_multi_range((0.05, 0.2), (0.8, 0.95))) as i32 - chunk_width / 2;
+        let castle_y = (chunk_height as f32 * rng_multi_range((0.05, 0.2), (0.8, 0.95))) as i32 - chunk_height / 2;
+        fields.insert((castle_x, castle_y), MapField::Castle);
+
+        // 街の生成 開始位置を避けて (0.55~1.0, 0~0.45の比率)に生成
+        for item in Item::iter() {
+            let town_x = (chunk_width as f32 * rng_multi_range((0.05, 0.45), (0.55, 0.95))) as i32 - chunk_width / 2;
+            let town_y = (chunk_height as f32 * rng_multi_range((0.05, 0.45), (0.55, 0.95))) as i32 - chunk_height / 2;
+            match fields[&(town_x, town_y)] {
+                // 街や城と重複した場合は追加しない
+                MapField::Town{item, visited } => continue,
+                MapField::Castle => continue,
+                _ => {}
+            }
+            fields.insert((town_x, town_y), MapField::Town{item, visited:false});
+        }
+
+        // タイルを追加
+        for (pos, field) in fields.iter_mut() {
+            let tile = Tile {
+                point: pos.clone(),
+                sprite_index: field.sprint_index(),
+                ..Default::default()
+            };
+            tiles.push(tile);
+            map.fields.insert(pos.clone(), field.clone());
+            if matches!(field, MapField::Water){
+                map.collisions.insert(pos.clone());
+            }
+        }
+
+        // // 水で囲む
+        // for x in 0..chunk_width {
+        //     let x = x - &chunk_width / 2;
+        //     let tile_lower = (x, -(chunk_height / 2));
+        //     let tile_upper = (x, chunk_height / 2 - 1);
+        //     // マップ上部
+        //     tiles.push(Tile {
+        //         point: tile_lower,
+        //         sprite_index: MapField::Water as usize,
+        //         sprite_order: 1,
+        //         ..Default::default()
+        //     });
+        //     // マップ下部
+        //     tiles.push(Tile {
+        //         point: tile_upper,
+        //         sprite_index: MapField::Water as usize,
+        //         sprite_order: 1,
+        //         ..Default::default()
+        //     });
+        //     // 通れない場所として登録
+        //     map.collisions.insert(tile_lower);
+        //     map.collisions.insert(tile_upper);
+        //     map.fields.insert(tile_lower, MapField::Water);
+        //     map.fields.insert(tile_upper, MapField::Water);
+        // }
+        // for y in 0..chunk_height {
+        //     let y = y - &chunk_height / 2;
+        //     let tile_left = (-chunk_width / 2, y);
+        //     let tile_right = (chunk_width / 2 - 1, y);
+        //     // マップ左端
+        //     tiles.push(Tile {
+        //         point: tile_left,
+        //         sprite_index: MapField::Water as usize,
+        //         sprite_order: 1,
+        //         ..Default::default()
+        //     });
+        //     // マップ右端
+        //     tiles.push(Tile {
+        //         point: tile_right,
+        //         sprite_index: MapField::Water as usize,
+        //         sprite_order: 1,
+        //         ..Default::default()
+        //     });
+        //     // 通れない場所として登録
+        //     map.collisions.insert(tile_left);
+        //     map.collisions.insert(tile_right);
+        //     map.fields.insert(tile_left, MapField::Water);
+        //     map.fields.insert(tile_right, MapField::Water);
+        // }
+        // // ランダムに通行不可領域を追加する
+        // // 1/12の確率 に設定
+        // let range = (chunk_width * chunk_height) as usize / 12;
+        // let mut rng = rand::thread_rng();
+        // for _ in 0..range {
+        //     // 座標をランダムに選択
+        //     let x: i32 = rng.gen_range(-chunk_width / 2 + 1, chunk_width / 2 - 1);
+        //     let y: i32 = rng.gen_range(-chunk_height / 2 + 1, chunk_height / 2 - 1);
+        //     let coord = (x, y, 0i32);
+        //     if coord != (0, 0, 0) {
+        //         tiles.push(Tile {
+        //             point: (x, y),
+        //             sprite_index: MapField::Water as usize,
+        //             ..Default::default()
+        //         });
+        //         map.collisions.insert((x, y));
+        //         map.fields.insert((x, y), MapField::Water);
+        //     }
+        // }
+        // // 他の地形を追加する
+        // // 1/6の確率に設定
+        // let range = (chunk_width * chunk_height) as usize / 6;
+        // for _ in 0..range {
+        //     let x = rng.gen_range(-chunk_width / 2 + 1, chunk_width / 2 - 1);
+        //     let y = rng.gen_range(-chunk_height / 2 + 1, chunk_height / 2 - 1);
+        //     tiles.push(Tile {
+        //         point: (x, y),
+        //         sprite_index: MapField::Forest as usize,
+        //         sprite_order: 1,
+        //         ..Default::default()
+        //     });
+        //     map.fields.insert((x, y), MapField::Forest);
+        // }
 
         map.width = chunk_width as u32;
         map.height = chunk_height as u32;
@@ -148,5 +219,14 @@ pub fn generate_map(
 
         // ワールドに追加
         tilemap.spawn_chunk((0, 0)).unwrap();
+    }
+}
+
+fn rng_multi_range(range1: (f32, f32), range2: (f32, f32)) -> f32 {
+    let mut rng = rand::thread_rng();
+    if rng.gen_bool(0.5){
+        rng.gen_range(range1.0, range1.1)
+    }else{
+        rng.gen_range(range2.0, range2.1)
     }
 }

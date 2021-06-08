@@ -136,16 +136,19 @@ impl CharacterStatus {
                           self.attack, self.defence);
         ret
     }
+    pub fn heal2max(&mut self) {
+        self.hp_current = self.hp_max;
+        self.mp_current = self.mp_max;
+    }
     pub fn add_exp(&mut self, exp: i32, inventory: &Inventory) -> bool{
         self.exp = (&self.exp + exp).clamp(1, 999);
         let new_lv = LEVEL_LIST.iter().filter(|&&e| e <= self.exp).last().unwrap() + 1;
         if self.lv != new_lv {
             self.level_up(new_lv, inventory); // レベルの更新
-            self.hp_current = self.hp_max;
-            self.mp_current = self.mp_max;
-            true
+            self.heal2max(); //最大値まで回復
+            return true;
         }
-        false
+        return false;
     }
     pub fn level_up(&mut self, new_level: i32, inventory: &Inventory){
         // 基本値の計算
@@ -171,11 +174,11 @@ impl CharacterStatus {
 
         // 範囲に収める
         self.attack = self.attack.clamp(1, 999);
-        self.defence = self.attack.clamp(1, 999);
-        self.hp_max = self.attack.clamp(1, 999);
-        self.mp_max = self.attack.clamp(1, 999);
-        self.hp_current = self.attack.clamp(1, 999);
-        self.mp_current = self.attack.clamp(1, 999);
+        self.defence = self.defence.clamp(1, 999);
+        self.hp_max = self.hp_max.clamp(1, 999);
+        self.mp_max = self.mp_max.clamp(1, 999);
+        self.hp_current = self.hp_current.clamp(1, 999);
+        self.mp_current = self.mp_current.clamp(1, 999);
     }
 }
 
@@ -207,12 +210,24 @@ pub struct AssetHandles {
 // マップフィールドの属性
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub enum MapField {
-    Grass = 0,
+    Grass,
     Forest,
     Mountain,
     Water,
-    Town,
+    Town{item: Item, visited: bool},
     Castle
+}
+impl MapField {
+    pub fn sprint_index(&self) -> usize {
+        match &self {
+            MapField::Grass => 0,
+            MapField::Forest => 1,
+            MapField::Mountain => 2,
+            MapField::Water => 3,
+            MapField::Town{ item, visited} => 4,
+            MapField::Castle => 4,
+        }
+    }
 }
 
 // 持ち物

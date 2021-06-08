@@ -78,7 +78,7 @@ pub fn input(
                         state.set(GameState::Battle).unwrap();
                     },
                     //マップ画面に遷移
-                    GameEvent::TownArrived => {
+                    GameEvent::TownArrived(_, _) => {
                         state.set(GameState::Map).unwrap();
                     },
                     //勝ったのでマップ画面に遷移
@@ -140,7 +140,7 @@ pub fn input(
 
     if keyboard_input.just_pressed(KeyCode::T) {
         match state.current() {
-            GameState::Map => events.send(GameEvent::TownArrived),
+            GameState::Map => events.send(GameEvent::TownArrived(Item::SpellFire(1), false)),
             _ => info!("unhandled key input"),
         }
         keyboard_input.reset(KeyCode::T);

@@ -1,4 +1,4 @@
-use crate::resources::Enemy;
+use crate::resources::{Enemy, Item};
 
 #[derive(Debug)]
 pub enum GameEvent {
@@ -6,7 +6,7 @@ pub enum GameEvent {
     EnemyEncountered(Enemy),
 
     // 街に到着
-    TownArrived,
+    TownArrived(Item, bool),
 
     // プレイヤーが移動
     PlayerMoved,

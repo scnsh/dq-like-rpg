@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::events::GameEvent;
-use crate::components::{Position, Player, MapCamera, position_to_field, UiEventText, CharacterStatus, Inventory};
+use crate::components::{Position, Player, MapCamera, position_to_field, UiEventText, CharacterStatus, Inventory, MapField};
 use crate::resources::{Map, GameState, Battle, RunState, Skill, Enemy};
 use rand::Rng;
 use crate::systems::attack;
@@ -8,10 +8,11 @@ use crate::systems::attack;
 // カメラを追従させる
 pub fn event_listener(
     mut events_reader: EventReader<GameEvent>,
-    map: Res<Map>,
+    mut map: ResMut<Map>,
     mut state: ResMut<State<GameState>>,
     mut battle: ResMut<Battle>,
-    mut player_status_query: Query<(&mut CharacterStatus, &Inventory), With<Player>>,
+    position_query: Query<&Position, With<MapCamera>>,
+    mut player_status_query: Query<(&mut CharacterStatus, &mut Inventory), With<Player>>,
     mut enemy_status_query: Query<(&mut CharacterStatus, &Skill, &Enemy), Without<Player>>,
     mut runstate: ResMut<RunState>
 ){
@@ -47,10 +48,27 @@ pub fn event_listener(
                 runstate.event = Option::from(GameEvent::EnemyEncountered(*enemy));
                 state.set(GameState::Event).unwrap();
             },
-            GameEvent::TownArrived => {
-                // TODO: Town到着の効果を反映させる
-                runstate.event = Option::from(GameEvent::TownArrived);
-                state.set(GameState::Event).unwrap();
+            GameEvent::TownArrived(item, visited) => {
+                let position = position_query.single().unwrap();
+                for (mut player_status, mut inventory) in player_status_query.iter_mut() {
+                    if !visited {
+                        // インベントリにアイテムを追加
+                        inventory.add_item(item.clone());
+                        // アイテム取得した状態を街に更新
+                        map.got_item((position.x, position.y));
+                        // 能力値計算(宝箱獲得で変わる可能性があるため)
+                        let current_lv = player_status.lv;
+                        println!("current_lv {}", player_status.lv);
+                        player_status.level_up(current_lv, &inventory);
+                        println!("get item");
+                    }
+                    // HP,MP回復
+                    player_status.heal2max();
+
+                    // Eventのシーンに遷移
+                    runstate.event = Option::from(GameEvent::TownArrived(item.clone(), *visited));
+                    state.set(GameState::Event).unwrap();
+                }
             }
             GameEvent::PlayerAttack => {
                 for (mut player_status, inventory) in player_status_query.iter_mut() {
@@ -69,7 +87,7 @@ pub fn event_listener(
                                 state.set(GameState::Event).unwrap();
                             }else{
                                 // 経験値を追加する
-                                let levelup = player_status.add_exp(enemy_status.hp_max/10, inventory);
+                                let levelup = player_status.add_exp(enemy_status.hp_max/10, &inventory);
                                 runstate.event = Option::from(GameEvent::Win(levelup));
                                 state.set(GameState::Event).unwrap();
                             }

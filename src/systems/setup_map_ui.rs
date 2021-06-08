@@ -91,7 +91,7 @@ pub fn setup_map_ui(
                                     ..Default::default()
                                 },
                                 text: Text::with_section(
-                                    format!("{}", inventory.skill_list()),
+                                    format!("{}", inventory),
                                     TextStyle {
                                         font: asset_server.load("fonts/PixelMplus12-Regular.ttf"),
                                         font_size: 30.0,
@@ -125,7 +125,7 @@ pub fn update_inventory_ui(
 ){
     for inventory in query.iter() {
         for mut text in queries.iter_mut(){
-            text.sections[0].value = format!("{}", inventory.skill_list());
+            text.sections[0].value = format!("{}", inventory);
         }
     }
 }

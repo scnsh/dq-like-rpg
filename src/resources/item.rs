@@ -1,8 +1,10 @@
 use std::fmt;
 use std::fmt::Display;
 use crate::resources::Skill;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(EnumIter, Clone, Eq, PartialEq, Copy, Debug, Hash)]
 pub enum Item {
     SpellHeal(u32),
     SpellFire(u32),

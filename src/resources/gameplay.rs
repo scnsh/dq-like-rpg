@@ -44,14 +44,18 @@ impl RunState {
                     GameEvent::EnemyEncountered(enemy) => {
                         format!("Battle!!!\n{0:?} appeared.\n", enemy)
                     },
-                    GameEvent::TownArrived => {
-                        format!("Town\nGet healed up your HP!\nGet a item\n")
+                    GameEvent::TownArrived(item, visited) => {
+                        if *visited {
+                            format!("Town\nGet healed up your HP!\n")
+                        }else{
+                            format!("Town\nGet healed up your HP!\nGet a {:?}!", item)
+                        }
                     },
                     GameEvent::Win(levelup) => {
-                        if levelup {
-                            format!("You Win!\nLevel Up!\n")
+                        if *levelup {
+                            return format!("You Win!\nLevel Up!\n");
                         }
-                        format!("You Win!\n")
+                        return format!("You Win!\n");
                     },
                     GameEvent::Lose => {
                         format!("You Lose!\n")

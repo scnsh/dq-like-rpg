@@ -26,12 +26,29 @@ pub fn translation(
     for (position) in queries.q1_mut().iter_mut(){
         // TODO: 地形に応じて確率を変えたい
         let mut rng = rand::thread_rng();
-        if rng.gen_bool(0.1) {
-            let enemy = enemy_data.field_to_enemy(
-                &position_to_field(&map, &(position.x, position.y)));
-            events_writer.send(GameEvent::EnemyEncountered(enemy));
+        let field = position_to_field(&map, &(position.x, position.y));
+        match field {
+            MapField::Town{item, visited} => {
+                // 街に着いた
+                events_writer.send(GameEvent::TownArrived(item, visited))
+            },
+            MapField::Castle => {
+                // ボス戦闘
+                let enemy = enemy_data.field_to_enemy(
+                    &position_to_field(&map, &(position.x, position.y)));
+                events_writer.send(GameEvent::EnemyEncountered(enemy))
+            },
+            MapField::Grass | MapField::Forest | MapField::Mountain => {
+                // ランダム戦闘
+                if rng.gen_bool(0.1) {
+                    let enemy = enemy_data.field_to_enemy(
+                        &position_to_field(&map, &(position.x, position.y)));
+                    events_writer.send(GameEvent::EnemyEncountered(enemy));
+                }
+            }
+            _ => {}
+        }
             // battle.enemy = enemy;
             // state.set(GameState::BattleView).unwrap();
-        }
     }
 }

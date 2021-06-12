@@ -31,24 +31,24 @@ pub fn input(
     // 十字キー操作
     if let Some(direction) = direction {
         match state.current() {
-            GameState::Map => {
-                // プレイヤーの位置を更新
-                for (_player_camera, mut position) in player_camera_query.iter_mut() {
-                    let mut new_position = (position.x as i32, position.y as i32);
-                    match direction {
-                        MoveDirection::Up => new_position.1 += 1,
-                        MoveDirection::Down => new_position.1 -= 1,
-                        MoveDirection::Left => new_position.0 -= 1,
-                        MoveDirection::Right => new_position.0 += 1,
-                    }
-                    if !_map.collisions.contains(&new_position) {
-                        position.x = new_position.0;
-                        position.y = new_position.1;
-                        // events.send(GameEvent::PlayerMoved);
-                        break;
-                    }
-                }
-            },
+            // GameState::Map => {
+            //     // プレイヤーの位置を更新
+            //     for (_player_camera, mut position) in player_camera_query.iter_mut() {
+            //         let mut new_position = (position.x as i32, position.y as i32);
+            //         match direction {
+            //             MoveDirection::Up => new_position.1 += 1,
+            //             MoveDirection::Down => new_position.1 -= 1,
+            //             MoveDirection::Left => new_position.0 -= 1,
+            //             MoveDirection::Right => new_position.0 += 1,
+            //         }
+            //         if !_map.collisions.contains(&new_position) {
+            //             position.x = new_position.0;
+            //             position.y = new_position.1;
+            //             // events.send(GameEvent::PlayerMoved);
+            //             break;
+            //         }
+            //     }
+            // },
             GameState::Battle => {
                 // インベントリのカーソル位置を更新
                 for (_player_camera, mut inventory, _player) in player_query.iter_mut() {
@@ -114,7 +114,7 @@ pub fn input(
             GameState::Map => {
                 for (_player_camera, mut position) in player_camera_query.iter_mut() {
                     let enemy = enemy_data.field_to_enemy(
-                        &position_to_field(&_map, &(position.x, position.y)));
+                        &position_to_field(&_map, &position));
                     battle.enemy = enemy.clone();
                     // state.set(GameState::Battle).unwrap()
                     events.send(GameEvent::EnemyEncountered(battle.enemy));

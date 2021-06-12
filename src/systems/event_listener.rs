@@ -5,8 +5,7 @@ use crate::resources::{Map, GameState, Battle, RunState, Skill, Enemy};
 use rand::Rng;
 use crate::systems::attack;
 
-// カメラを追従させる
-pub fn event_listener(
+pub fn map_event_listener(
     mut events_reader: EventReader<GameEvent>,
     mut map: ResMut<Map>,
     mut state: ResMut<State<GameState>>,
@@ -16,8 +15,6 @@ pub fn event_listener(
     mut enemy_status_query: Query<(&mut CharacterStatus, &Skill, &Enemy), Without<Player>>,
     mut runstate: ResMut<RunState>
 ){
-    // let mut new_events = Vec::new();
-
     for event in events_reader.iter() {
         match event {
             GameEvent::PlayerMoved => {
@@ -55,7 +52,7 @@ pub fn event_listener(
                         // インベントリにアイテムを追加
                         inventory.add_item(item.clone());
                         // アイテム取得した状態を街に更新
-                        map.got_item((position.x, position.y));
+                        map.got_item((position.x as i32, position.y as i32));
                         // 能力値計算(宝箱獲得で変わる可能性があるため)
                         let current_lv = player_status.lv;
                         println!("current_lv {}", player_status.lv);
@@ -70,6 +67,23 @@ pub fn event_listener(
                     state.set(GameState::Event).unwrap();
                 }
             }
+            _ => {panic!("unhandled event!!")}
+        }
+    }
+}
+
+pub fn battle_event_listener(
+    mut events_reader: EventReader<GameEvent>,
+    mut map: ResMut<Map>,
+    mut state: ResMut<State<GameState>>,
+    mut battle: ResMut<Battle>,
+    position_query: Query<&Position, With<MapCamera>>,
+    mut player_status_query: Query<(&mut CharacterStatus, &mut Inventory), With<Player>>,
+    mut enemy_status_query: Query<(&mut CharacterStatus, &Skill, &Enemy), Without<Player>>,
+    mut runstate: ResMut<RunState>
+){
+    for event in events_reader.iter() {
+        match event {
             GameEvent::PlayerAttack => {
                 for (mut player_status, inventory) in player_status_query.iter_mut() {
                     for (mut enemy_status, skill, enemy) in enemy_status_query.iter_mut() {
@@ -106,10 +120,7 @@ pub fn event_listener(
                     }
                 }
             }
-            _ => {}
+            _ => {panic!("unhandled event!")}
         }
     }
-    // for event in new_events {
-    //     events_writer.send(event);
-    // }
 }

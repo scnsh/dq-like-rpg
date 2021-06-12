@@ -26,8 +26,8 @@ pub fn render_layer(layer: RenderLayer) -> usize {
 
 #[derive(Default, Copy, Clone, PartialEq, Debug)]
 pub struct Position {
-    pub x: i32,
-    pub y: i32,
+    pub x: f32,
+    pub y: f32,
 }
 
 pub fn position_to_translation(
@@ -36,17 +36,17 @@ pub fn position_to_translation(
     z: f32,
 ) -> Transform {
     Transform::from_translation(Vec3::new(
-        (position.x as f32 + 1. / 2.)  * map.tile_size,
-        (position.y as f32 + 1. / 2.) * map.tile_size,
+        (position.x + 1. / 2.)  * map.tile_size,
+        (position.y + 1. / 2.) * map.tile_size,
         z,
     ))
 }
 
 pub fn position_to_field(
     map: &Res<Map>,
-    point: &(i32, i32),
+    point: &Position,
 ) -> MapField {
-    match map.fields.get(point){
+    match map.fields.get(&(point.x as i32, point.y as i32)){
         Some(field) => field.clone(),
         _ => panic!()
     }
@@ -54,7 +54,27 @@ pub fn position_to_field(
 
 pub struct Player;
 
-pub struct MapCamera;
+// システムラベル(SystemLabel)
+#[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
+pub enum PlayerMovement {
+    Input,
+    Movement,
+    // Eating,
+    // Growth,
+}
+
+pub enum MapCameraState{
+    Stop,
+    Moving,
+}
+
+pub struct MapCamera{
+    // どちらにむかう入力が入っているかを保持する
+    pub direction: MoveDirection,
+    pub destination: Position,
+    pub state: MapCameraState,
+}
+
 
 pub struct BattleCamera;
 

@@ -27,7 +27,7 @@ pub fn setup_battle(
     // プレイヤーの現在位置を取得
     let (_player, player_transform, position) = player_camera_query.single().unwrap();
     let player_status = player_query.single().unwrap();
-    let map_field = position_to_field(&map, &(position.x, position.y));
+    let map_field = position_to_field(&map, position);
     let enemy_status = enemy_data.create(&map_field,
                                          level(player_status.lv,
                                                enemy_data.field_to_enemy(&map_field)));

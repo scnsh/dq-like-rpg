@@ -5,14 +5,16 @@ use crate::resources::*;
 
 pub fn spawn_player(
     mut commands: Commands,
-    // asset_server: Res<AssetServer>,
     asset_handles: Res<AssetHandles>, // スプライト全体のハンドルとロード状態を管理
-    // map: Res<Map>,
+    map: Res<Map>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut camera_query: Query<(Entity, &Transform), (With<MapCamera>)>,
+    mut camera_query: Query<(Entity, &mut Transform), (With<MapCamera>)>,
     mut game_state: ResMut<State<GameState>>,
 ){
-    for (camera, transform) in camera_query.iter_mut() {
+    for (camera, mut transform) in camera_query.iter_mut() {
+        // カメラ位置を調整する
+        *transform = position_to_translation(&map, &Position{x:0.,y:0.},
+                                                   transform.translation.z);
         // 主人公を追加する
         // let you_sprite = asset_server.load("images/player/you.png");
         let you_sprite = asset_handles.player.clone();

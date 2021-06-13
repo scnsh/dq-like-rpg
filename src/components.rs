@@ -12,7 +12,8 @@ pub enum RenderLayer {
     MapForeGround, // マップの前景
     Player,
     BattleBackGround, // バトルの背景
-    BattleForeGround, // バトルの背景
+    BattleForeGround, // バトルの前景
+    BattleEffect,     // バトルのエフェクト
 }
 pub fn render_layer(layer: RenderLayer) -> usize {
     match layer {
@@ -21,6 +22,7 @@ pub fn render_layer(layer: RenderLayer) -> usize {
         RenderLayer::Player => 2,
         RenderLayer::BattleBackGround => 3,
         RenderLayer::BattleForeGround => 4,
+        RenderLayer::BattleEffect => 5,
     }
 }
 
@@ -52,7 +54,17 @@ pub fn position_to_field(
     }
 }
 
-pub struct Player;
+// バトルの状態
+#[derive(Debug)]
+pub enum PlayerBattleState {
+    Select, // プレイヤーの入力待ち
+    Attack, // プレイヤー攻撃中
+    Defense, // 相手の攻撃中
+}
+
+pub struct Player{
+    pub battle_state: PlayerBattleState,
+}
 
 // システムラベル(SystemLabel)
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
@@ -304,5 +316,27 @@ impl Inventory {
     }
     pub fn skill(&self) -> Skill{
         self.skills[self.selected_skill_index]
+    }
+}
+
+pub enum EffectKind {
+    Attack,
+    Heal,
+    Spell
+}
+pub struct EffectSpawnEvent {
+    pub kind: EffectKind,
+}
+
+pub fn skill_to_effect(skill: Skill) -> EffectKind{
+    match skill {
+        Skill::Sword | Skill::Wind | Skill::Death | Skill::Arrow => EffectKind::Attack,
+        Skill::Spell(item) => {
+            match item {
+                Item::SpellHeal(lv) => EffectKind::Heal,
+                Item::SpellFire(lv) | Item::SpellIce(lv) => EffectKind::Spell,
+                _ => panic!("select item cannot use.")
+            }
+        },
     }
 }

@@ -30,7 +30,7 @@ pub fn spawn_player(
                 ..Default::default()
             })
             .insert(RenderLayers::layer(0))
-            .insert(Player)
+            .insert(Player{battle_state: PlayerBattleState::Select})
             .insert(CharacterStatus::default())
             .insert(Inventory::default())
             // .insert(position)

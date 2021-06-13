@@ -103,6 +103,8 @@ pub fn setup_battle(
 
     // battle用のコンポーネントを保持
     battle.entity = Some(battle_entity);
+    battle.enemy_root_offset = Vec2::new(player_transform.translation.x + enemy_root_offset.x,
+                                         player_transform.translation.y + enemy_root_offset.y);
 
     // // 戦闘用のUIを表示するように変更
     // for (_entity, mut visible) in ui_queries.q0_mut().iter_mut(){
@@ -347,7 +349,7 @@ pub fn level(player_lv: i32, enemy: Enemy) -> i32 {
 }
 
 // 攻撃計算
-pub fn attack(own_status: &mut CharacterStatus, other_status: &mut CharacterStatus, skill: Skill){
+pub fn attack(own_status: &mut CharacterStatus, other_status: &mut CharacterStatus, skill: Skill) -> i32{
     let (mut attack, mut defence, mut heal, mut mp, mut dmg, mut spl) : (i32, i32, i32, i32, i32, i32) = (0, 0, 0, 0, 0, 0);
     let mut rng = rand::thread_rng();
     // 行動種類
@@ -397,20 +399,24 @@ pub fn attack(own_status: &mut CharacterStatus, other_status: &mut CharacterStat
     if own_status.mp_current < mp {
         heal = 0;
         dmg = 0;
+        0
     }else{
+        //MP消費
+        own_status.mp_current = (own_status.mp_current - mp).clamp(0, 999);
+        println!("consume mp {}, current to {}", mp, own_status.mp_current);
+
         if heal > 0 {
             //回復
             own_status.hp_current = (own_status.hp_current + heal).clamp(1, own_status.hp_max);
             println!("heal {}, hp to {}", heal, own_status.hp_current);
+            heal
         }else{
             //ダメージ
             dmg = attack + rng.gen_range(0, &attack) - rng.gen_range(0, defence);
             dmg = dmg.clamp(1, 999);
             other_status.hp_current = (other_status.hp_current - dmg).clamp(0, 999);
             println!("damage {}, hp to {}", dmg, other_status.hp_current);
+            dmg
         }
-        //MP消費
-        own_status.mp_current = (own_status.mp_current - mp).clamp(0, 999);
-        println!("consume mp {}, current to {}", mp, own_status.mp_current);
     }
 }

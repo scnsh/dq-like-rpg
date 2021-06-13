@@ -16,7 +16,6 @@ pub enum GameState {
     Event,
     GameClear,
 }
-
 // 初期状態
 impl Default for GameState {
     fn default() -> Self {
@@ -28,14 +27,7 @@ impl Default for GameState {
 pub struct RunState {
     pub event: Option<GameEvent>,
 }
-
 impl RunState {
-    // pub fn new() -> RunState {
-    //     RunState {
-    //         event: None,
-    //     }
-    // }
-
     pub fn event_text(&self) -> String {
         match &self.event {
             None => panic!("can't convert text from None."),

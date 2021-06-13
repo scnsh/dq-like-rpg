@@ -14,62 +14,11 @@ pub fn input(
     mut battle: ResMut<Battle>,
     runstate: Res<RunState>,
     enemy_data: Res<EnemyData>,
+    mut effect_spawn_events: EventWriter<EffectSpawnEvent>,
 ) {
-    // キーボード操作の入力を受け取る
-    let direction = if keyboard_input.just_pressed(KeyCode::Up) {
-        Some(MoveDirection::Up)
-    } else if keyboard_input.just_pressed(KeyCode::Down) {
-        Some(MoveDirection::Down)
-    } else if keyboard_input.just_pressed(KeyCode::Left) {
-        Some(MoveDirection::Left)
-    } else if keyboard_input.just_pressed(KeyCode::Right) {
-        Some(MoveDirection::Right)
-    } else {
-        None
-    };
-
-    // 十字キー操作
-    if let Some(direction) = direction {
-        match state.current() {
-            // GameState::Map => {
-            //     // プレイヤーの位置を更新
-            //     for (_player_camera, mut position) in player_camera_query.iter_mut() {
-            //         let mut new_position = (position.x as i32, position.y as i32);
-            //         match direction {
-            //             MoveDirection::Up => new_position.1 += 1,
-            //             MoveDirection::Down => new_position.1 -= 1,
-            //             MoveDirection::Left => new_position.0 -= 1,
-            //             MoveDirection::Right => new_position.0 += 1,
-            //         }
-            //         if !_map.collisions.contains(&new_position) {
-            //             position.x = new_position.0;
-            //             position.y = new_position.1;
-            //             // events.send(GameEvent::PlayerMoved);
-            //             break;
-            //         }
-            //     }
-            // },
-            GameState::Battle => {
-                // インベントリのカーソル位置を更新
-                for (_player_camera, mut inventory, _player) in player_query.iter_mut() {
-                    match direction {
-                        MoveDirection::Up => inventory.decrement_index(),
-                        MoveDirection::Down => inventory.increment_index(),
-                        _ => info!("unhandled key input"),
-                    }
-                }
-            },
-            _ => info!("unhandled state"),
-        }
-    }
-
     // 決定ボタン操作
     if keyboard_input.just_pressed(KeyCode::Return) {
         match state.current() {
-            GameState::Battle => {
-                //スキル発動ボタン
-                events.send(GameEvent::PlayerAttack);
-            }
             GameState::Event => {
                 let event = runstate.event.as_ref().unwrap();
                 match event {
@@ -144,5 +93,12 @@ pub fn input(
             _ => info!("unhandled key input"),
         }
         keyboard_input.reset(KeyCode::T);
+    }
+
+    if keyboard_input.just_pressed(KeyCode::E) {
+        effect_spawn_events.send(EffectSpawnEvent {
+            kind: skill_to_effect(Skill::Sword)
+        });
+        keyboard_input.reset(KeyCode::E);
     }
 }

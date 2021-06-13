@@ -21,6 +21,7 @@ use crate::events::GameEvent;
 fn main() {
     App::build()
         .add_event::<GameEvent>()
+        .add_event::<EffectSpawnEvent>()
         .insert_resource(WindowDescriptor {
             title: "RPG".to_string(),
             width: 1024.,
@@ -113,10 +114,13 @@ fn main() {
         )
         .add_system_set(
             SystemSet::on_update(GameState::Battle)
+                .with_system(systems::player_battle_input.system())
                 .with_system(systems::update_enemy_status_ui.system())
                 .with_system(systems::update_battle_inventory_ui.system())
                 .with_system(systems::update_status_ui.system())
-                .with_system(systems::battle_event_listener.system())
+                .with_system(systems::battle_system.system())
+                .with_system(systems::spawn_effect_event.system())
+                .with_system(systems::handle_effect.system())
         )
         .add_system_set(
             SystemSet::on_enter(GameState::Event)

@@ -5,6 +5,7 @@ use bevy::{
 use std::fmt;
 use std::fmt::Display;
 use crate::events::GameEvent;
+use std::collections::HashMap;
 
 #[derive(Clone, Copy)]
 pub enum RenderLayer {
@@ -235,6 +236,7 @@ pub struct AssetHandles {
     pub tilemap: Handle<Texture>,
     pub player: Handle<Texture>,
     pub battle_background: Handle<Texture>,
+    pub battle_effects: HashMap<EffectKind, (Handle<Texture>, usize)>,
     pub enemies: Vec<Handle<Texture>>,
     // pub atlas_loaded: bool,
 }
@@ -319,6 +321,7 @@ impl Inventory {
     }
 }
 
+#[derive(Clone, Eq, PartialEq, Hash)]
 pub enum EffectKind {
     Attack,
     Heal,

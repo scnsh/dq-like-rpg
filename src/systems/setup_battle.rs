@@ -81,23 +81,34 @@ pub fn setup_battle(
                 });
             /// 敵を追加
             child_builder.spawn_bundle(SpriteBundle {
-                material: materials.add(enemy_sprite.clone().into()),
-                transform: Transform {
-                    translation: Vec3::new(enemy_root_offset.x,
-                                           enemy_root_offset.y,
-                                           render_layer(RenderLayer::BattleForeGround) as f32),
-                    scale: Vec3::new(enemy_scale,
-                                     enemy_scale,
-                                     1.),
-                    ..Default::default()
-                },
+                transform: Transform::from_translation(Vec3::new(
+                    enemy_root_offset.x,
+                    enemy_root_offset.y,
+                    0.)),
                 ..Default::default()
+            }).insert(ForState {
+                states: vec![GameState::Battle],
             })
-                .insert(enemy_status.clone())
-                .insert(enemy_skill)
-                .insert(enemy)
-                .insert(ForState {
-                    states: vec![GameState::Battle],
+                .with_children(|child_builder|{
+                    child_builder.spawn_bundle(SpriteBundle {
+                        material: materials.add(enemy_sprite.clone().into()),
+                        transform: Transform {
+                            translation: Vec3::new(0.,
+                                                   0.,
+                                                   render_layer(RenderLayer::BattleForeGround) as f32),
+                            scale: Vec3::new(enemy_scale,
+                                             enemy_scale,
+                                             1.),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    })
+                        .insert(enemy_status.clone())
+                        .insert(enemy_skill)
+                        .insert(enemy)
+                        .insert(ForState {
+                            states: vec![GameState::Battle],
+                        });
                 });
         }).id();
 

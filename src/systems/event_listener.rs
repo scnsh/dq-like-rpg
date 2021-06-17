@@ -74,12 +74,12 @@ pub fn map_event_listener(
 
 pub fn battle_system(
     mut state: ResMut<State<GameState>>,
-    mut player_status_query: Query<(&mut CharacterStatus, &mut Inventory, &Player), Changed<Player>>,
+    mut player_status_query: Query<(&mut CharacterStatus, &mut Inventory, &mut Player), Changed<Player>>,
     mut enemy_status_query: Query<(&mut CharacterStatus, &Skill, &Enemy), Without<Player>>,
     mut effect_spawn_events: EventWriter<EffectSpawnEvent>,
     mut runstate: ResMut<RunState>
 ){
-    for (mut player_status, mut inventory, player) in player_status_query.iter_mut() {
+    for (mut player_status, mut inventory, mut player) in player_status_query.iter_mut() {
         for (mut enemy_status, skill, enemy) in enemy_status_query.iter_mut() {
             match player.battle_state {
                 PlayerBattleState::Attack => {
@@ -92,7 +92,9 @@ pub fn battle_system(
                     // エフェクトを表示
                     // TODO: 数字も表示する
                     effect_spawn_events.send(EffectSpawnEvent {
-                        kind: skill_to_effect(inventory.skill())
+                        kind: skill_to_effect(inventory.skill()),
+                        damage_or_heal: dmg_or_heal,
+                        is_player_attack: true
                     });
                 },
                 // 敵が攻撃を開始
@@ -109,6 +111,7 @@ pub fn battle_system(
                             runstate.event = Option::from(GameEvent::Win(levelup));
                             state.set(GameState::Event).unwrap();
                         }
+                        player.battle_state = PlayerBattleState::Select
                     }
                     // 敵の攻撃を実施
                     let dmg = attack(
@@ -117,9 +120,10 @@ pub fn battle_system(
                         *skill
                     );
                     // エフェクトを表示
-                    // TODO: 数字も表示する
                     effect_spawn_events.send(EffectSpawnEvent {
-                        kind: skill_to_effect(*skill)
+                        kind: skill_to_effect(*skill),
+                        damage_or_heal: dmg,
+                        is_player_attack: false
                     });
                 }
                 // 自分の攻撃を選択
@@ -128,6 +132,7 @@ pub fn battle_system(
                     if player_status.hp_current <= 0 {
                         runstate.event = Option::from(GameEvent::Lose);
                         state.set(GameState::Event).unwrap();
+                        player.battle_state = PlayerBattleState::Select
                     }
                 }
             }

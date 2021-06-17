@@ -25,7 +25,7 @@ pub fn setup_battle(
     // https://github.com/StarArawn/bevy_roguelike_prototype/blob/main/src/game/gameplay/scenes/battle.rs
 
     // プレイヤーの現在位置を取得
-    let (_player, player_transform, position) = player_camera_query.single().unwrap();
+    let (_camera, player_transform, position) = player_camera_query.single().unwrap();
     let player_status = player_query.single().unwrap();
     let map_field = position_to_field(&map, position);
     let enemy_status = enemy_data.create(&map_field,
@@ -66,8 +66,8 @@ pub fn setup_battle(
             //     .insert(RenderLayers::layer(1));
             /// 背景を追加
             child_builder.spawn_bundle(SpriteBundle {
-                sprite: Sprite::new(Vec2::new(window.height(), window.width())),
-                material: materials.add(background.into()),
+                sprite: Sprite::new(Vec2::new(window.width(), window.height())),
+                material: materials.add(Color::BLACK.into()),
                 transform: Transform {
                     translation: Vec3::new(0.,
                                            0.,
@@ -89,7 +89,7 @@ pub fn setup_battle(
             }).insert(ForState {
                 states: vec![GameState::Battle],
             })
-                .with_children(|child_builder|{
+                .with_children(|child_builder| {
                     child_builder.spawn_bundle(SpriteBundle {
                         material: materials.add(enemy_sprite.clone().into()),
                         transform: Transform {

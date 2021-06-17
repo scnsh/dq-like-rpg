@@ -23,7 +23,7 @@ pub fn render_layer(layer: RenderLayer) -> usize {
         RenderLayer::Player => 2,
         RenderLayer::BattleBackGround => 3,
         RenderLayer::BattleForeGround => 4,
-        RenderLayer::BattleEffect => 5,
+        RenderLayer::BattleEffect => 100,
     }
 }
 
@@ -175,7 +175,7 @@ impl CharacterStatus {
     }
     pub fn add_exp(&mut self, exp: i32, inventory: &Inventory) -> bool{
         self.exp = (&self.exp + exp).clamp(1, 999);
-        let new_lv = LEVEL_LIST.iter().filter(|&&e| e <= self.exp).last().unwrap() + 1;
+        let new_lv = LEVEL_LIST.iter().filter(|&&e| e <= self.exp).count() as i32;
         if self.lv != new_lv {
             self.level_up(new_lv, inventory); // レベルの更新
             self.heal2max(); //最大値まで回復
@@ -329,6 +329,8 @@ pub enum EffectKind {
 }
 pub struct EffectSpawnEvent {
     pub kind: EffectKind,
+    pub damage_or_heal: i32,
+    pub is_player_attack: bool,
 }
 
 pub fn skill_to_effect(skill: Skill) -> EffectKind{
@@ -343,3 +345,5 @@ pub fn skill_to_effect(skill: Skill) -> EffectKind{
         },
     }
 }
+
+pub struct EffectString;

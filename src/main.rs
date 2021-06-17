@@ -123,6 +123,10 @@ fn main() {
                 .with_system(systems::handle_effect.system())
         )
         .add_system_set(
+            SystemSet::on_exit(GameState::Battle)
+                .with_system(systems::clean_up_effect.system())
+        )
+        .add_system_set(
             SystemSet::on_enter(GameState::Event)
                 .with_system(systems::setup_event_ui.system())
                 .with_system(systems::state_enter_despawn.system()),

@@ -97,7 +97,9 @@ pub fn input(
 
     if keyboard_input.just_pressed(KeyCode::E) {
         effect_spawn_events.send(EffectSpawnEvent {
-            kind: skill_to_effect(Skill::Sword)
+            kind: skill_to_effect(Skill::Sword),
+            damage_or_heal: 10,
+            is_player_attack: true
         });
         keyboard_input.reset(KeyCode::E);
     }

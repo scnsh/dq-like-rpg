@@ -221,6 +221,7 @@ pub enum MoveDirection {
     Down,
     Left,
     Right,
+    None,
 }
 
 // #[derive(Default)]

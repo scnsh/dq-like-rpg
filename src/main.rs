@@ -90,17 +90,7 @@ fn main() {
         .add_system_set(
             SystemSet::on_update(GameState::Map)
                 .with_system(systems::animate_sprite_system.system())
-                .with_system(
-                    systems::player_movement_input
-                        .system()
-                        // playerを動かす前に入力を取得
-                        .label(PlayerMovement::Input)
-                        .before(PlayerMovement::Movement)
-                )
-                .with_system(
-                    systems::translation_animation
-                        .system()
-                        .label(PlayerMovement::Movement))
+                .with_system(systems::translation_animation.system())
                 // .with_system(systems::translation.system())
                 .with_system(systems::update_status_ui.system())
                 .with_system(systems::update_inventory_ui.system())
@@ -114,7 +104,6 @@ fn main() {
         )
         .add_system_set(
             SystemSet::on_update(GameState::Battle)
-                .with_system(systems::player_battle_input.system())
                 .with_system(systems::update_enemy_status_ui.system())
                 .with_system(systems::update_battle_inventory_ui.system())
                 .with_system(systems::update_status_ui.system())

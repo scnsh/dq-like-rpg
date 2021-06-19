@@ -63,6 +63,7 @@ pub fn translation_animation(
                     MoveDirection::Down => {
                         position.y = get_new_position(position.y, -velocity, map_camera.destination.y);
                     },
+                    _ => {}
                 }
                 // info!("{0:?}, {1:?}",position, map_camera.destination);
                 *transform =

@@ -13,11 +13,7 @@ pub fn setup_cameras(
     // 描画範囲を絞る
     map_camera.orthographic_projection.scale = 0.3;
     commands.spawn_bundle(map_camera)
-        .insert(MapCamera{
-            direction: MoveDirection::Down, // 開始時は下向き
-            destination: Position{x:0., y:0.}, // 開始時は下向き
-            state: MapCameraState::Stop,
-        })
+        .insert(MapCamera::default())
         .insert(Position { x: 0., y: 0. })
         .insert(Timer::from_seconds(0.25, true));
         // MapView は Layer0 に描画する

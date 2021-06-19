@@ -3,6 +3,8 @@ use crate::components::CharacterStatus;
 use crate::resources::{Enemy, Item};
 use bevy::text::Text;
 use bevy::math::Vec2;
+use std::fmt::{Display, Formatter};
+use std::fmt;
 
 
 #[derive(Default)]
@@ -25,14 +27,12 @@ pub enum Skill {
     Death,
 }
 
-
-// // 初期状態
-// impl Default for Battle {
-//     fn default() -> Self {
-//         Battle{
-//             entity: None,
-//             ui_entity: None,
-//         }
-//     }
-// }
+impl Display for Skill {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            Skill::Spell(item) => { write!(f, "{}", item) }
+            _ => {write!(f, "{:?}", self)}
+        }
+    }
+}
 

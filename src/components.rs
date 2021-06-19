@@ -76,6 +76,7 @@ pub enum PlayerMovement {
     // Growth,
 }
 
+#[derive(Debug)]
 pub enum MapCameraState{
     Stop,
     Moving,
@@ -86,6 +87,15 @@ pub struct MapCamera{
     pub direction: MoveDirection,
     pub destination: Position,
     pub state: MapCameraState,
+}
+impl Default for MapCamera {
+    fn default() -> Self {
+        MapCamera {
+            direction: MoveDirection::None, // 開始時は向きなし
+            destination: Position{x:0., y:0.}, // 開始時は下向き
+            state: MapCameraState::Stop,
+        }
+    }
 }
 
 
@@ -292,10 +302,10 @@ impl Inventory {
         let mut ret = String::new();
         for (i, s) in self.skills.iter().enumerate(){
             if i == self.selected_skill_index {
-                ret.push_str(&format!("> {:?}\n", s));
+                ret.push_str(&format!("> {}\n", s));
             }
             else{
-                ret.push_str(&format!("  {:?}\n", s));
+                ret.push_str(&format!("  {}\n", s));
             }
         }
         ret

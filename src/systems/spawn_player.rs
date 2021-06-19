@@ -8,13 +8,16 @@ pub fn spawn_player(
     asset_handles: Res<AssetHandles>, // スプライト全体のハンドルとロード状態を管理
     map: Res<Map>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut camera_query: Query<(Entity, &mut Transform), (With<MapCamera>)>,
+    mut camera_query: Query<(Entity, &mut Transform, &mut Position, &mut MapCamera)>,
     mut game_state: ResMut<State<GameState>>,
 ){
-    for (camera, mut transform) in camera_query.iter_mut() {
-        // カメラ位置を調整する
+    for (camera, mut transform, mut position, mut map_camera) in camera_query.iter_mut() {
+        // カメラ位置をリセットする(GameOver後のリスタートも想定する)
         *transform = position_to_translation(&map, &Position{x:0.,y:0.},
                                                    transform.translation.z);
+        *position = Position{x:0., y:0.};
+        *map_camera = MapCamera::default();
+
         // 主人公を追加する
         // let you_sprite = asset_server.load("images/player/you.png");
         let you_sprite = asset_handles.player.clone();
@@ -42,4 +45,13 @@ pub fn spawn_player(
 
     // 次の画面に遷移する
     game_state.set(GameState::Map).unwrap();
+}
+
+pub fn despawn_player(
+    mut commands: Commands,
+    player_query: Query<Entity, With<Player>>,
+){
+    for entity in player_query.iter(){
+        commands.entity(entity).despawn_recursive();
+    }
 }

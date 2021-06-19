@@ -101,7 +101,7 @@ pub fn generate_map(
         fields.insert((castle_x, castle_y), MapField::Castle);
 
         // 街の生成 開始位置を避けて (0.55~1.0, 0~0.45の比率)に生成
-        for item in Item::iter() {
+        for item in generate_items() {
             let town_x = (chunk_width as f32 * rng_multi_range((0.05, 0.45), (0.55, 0.95))) as i32 - chunk_width / 2;
             let town_y = (chunk_height as f32 * rng_multi_range((0.05, 0.45), (0.55, 0.95))) as i32 - chunk_height / 2;
             match fields[&(town_x, town_y)] {

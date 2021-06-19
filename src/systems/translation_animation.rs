@@ -12,6 +12,7 @@ pub fn translation_animation(
     enemy_data: Res<EnemyData>,
 ){
     if let Some((mut transform, mut position, mut map_camera)) = map_camera_query.iter_mut().next() {
+        println!("{0:?}, {1:?}, {2:?}", map_camera.state, map_camera.destination, position);
         let velocity = time.delta_seconds() * 3.;
         if map_camera.destination == *position{
             // 移動状態から停止状態に遷移
@@ -32,10 +33,10 @@ pub fn translation_animation(
                     },
                     MapField::Grass | MapField::Forest | MapField::Mountain => {
                         // ランダム戦闘
+                        let field = &position_to_field(&map, &position);
                         let mut rng = rand::thread_rng();
-                        if rng.gen_bool(0.1) {
-                            let enemy = enemy_data.field_to_enemy(
-                                &position_to_field(&map, &position));
+                        if rng.gen_bool((1. / enemy_data.field_to_rate(field) as f32) as f64) {
+                            let enemy = enemy_data.field_to_enemy(field);
                             events_writer.send(GameEvent::EnemyEncountered(enemy));
                         }
                     }
@@ -78,6 +79,7 @@ fn get_new_position(
     velocity: f32,
     destination: f32,
 ) -> f32 {
+    println!("{0}, {1}, {2}", position, velocity, destination);
     if velocity < 0.{
         return (position + velocity).clamp(destination, position);
     }

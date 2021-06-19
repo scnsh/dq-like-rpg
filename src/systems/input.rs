@@ -5,11 +5,12 @@ use bevy::app::Events;
 use crate::events::GameEvent;
 
 pub fn input(
+    mut commands: Commands,
     mut keyboard_input: ResMut<Input<KeyCode>>,
     _map: Res<Map>,
     mut state: ResMut<State<GameState>>,
     mut events: EventWriter<GameEvent>,
-    mut player_query: Query<(&mut CharacterStatus, &mut Inventory, &mut Player)>,
+    mut player_query: Query<(&mut CharacterStatus, &mut Inventory, &mut Player, Entity)>,
     mut player_camera_query: Query<(&mut MapCamera, &mut Position)>,
     mut battle: ResMut<Battle>,
     runstate: Res<RunState>,
@@ -58,7 +59,6 @@ pub fn input(
                     &position_to_field(&_map, &position));
                 battle.enemy = enemy.clone();
                 // state.set(GameState::Battle).unwrap()
-                println!("encount");
                 events.send(GameEvent::EnemyEncountered(battle.enemy));
 
                 keyboard_input.reset(KeyCode::B);
@@ -83,7 +83,7 @@ pub fn input(
             None
         };
 
-        for (mut _character_status, mut inventory, _player) in player_query.iter_mut() {
+        for (mut _character_status, mut inventory, _player, _entity) in player_query.iter_mut() {
             if let Some(direction) = direction {
                 // インベントリのカーソル位置を更新
                 match direction {
@@ -96,7 +96,7 @@ pub fn input(
 
         // 決定ボタン操作
         if keyboard_input.just_pressed(KeyCode::Return) {
-            for (mut _character_status, mut _inventory, mut player) in player_query.iter_mut() {
+            for (mut _character_status, mut _inventory, mut player, _entity) in player_query.iter_mut() {
                 println!("pressed with {0:?}", player.battle_state);
                 if matches!(player.battle_state, PlayerBattleState::Select) {
                     // state を更新
@@ -120,7 +120,7 @@ pub fn input(
             keyboard_input.reset(KeyCode::E);
         }
         if keyboard_input.just_pressed(KeyCode::I) {
-            for (_player_camera, mut inventory, _player) in player_query.iter_mut() {
+            for (_player_camera, mut inventory, _player, _entity) in player_query.iter_mut() {
                 inventory.add_item(Item::SpellFire(1));
             }
             keyboard_input.reset(KeyCode::I);
@@ -147,10 +147,18 @@ pub fn input(
                 //負けたのでタイトルに遷移
                 // TODO: 経験値を更新してマップに戻らせる
                 GameEvent::Lose => {
+                    // Playerを削除する
+                    for (_player_camera, _inventory, _player, entity) in player_query.iter_mut() {
+                        commands.entity(entity).despawn_recursive();
+                    }
                     state.set(GameState::Title).unwrap();
                 }
                 // TODO: タイトルに戻って経験値引き継ぎ要素を入れる
                 GameEvent::WinLast => {
+                    // Playerを削除する
+                    for (_player_camera, _inventory, _player, entity) in player_query.iter_mut() {
+                        commands.entity(entity).despawn_recursive();
+                    }
                     state.set(GameState::Title).unwrap();
                 }
                 _ => panic!("unexpected event"),
@@ -160,7 +168,7 @@ pub fn input(
 
     // デバッグ機能
     if keyboard_input.just_pressed(KeyCode::A) {
-        for (mut player_status, _inventory, _player) in player_query.iter_mut() {
+        for (mut player_status, _inventory, _player, _entity) in player_query.iter_mut() {
             player_status.hp_current -= 10;
         }
     }

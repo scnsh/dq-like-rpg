@@ -72,6 +72,12 @@ impl EnemyData {
         }
         panic!("unexpected map field.")
     }
+    pub fn field_to_rate(&self, map_field: &MapField) -> i32 {
+        if let &enemy_status = &self.data[map_field] {
+            return enemy_status.rate;
+        }
+        panic!("unexpected map field.")
+    }
     pub fn field_to_enemy_skill(&self, map_field: &MapField) -> Skill {
         if let &enemy_status = &self.data[map_field] {
             return enemy_status.skl;

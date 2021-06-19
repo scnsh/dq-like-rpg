@@ -361,7 +361,7 @@ pub fn level(player_lv: i32, enemy: Enemy) -> i32 {
 
 // 攻撃計算
 pub fn attack(own_status: &mut CharacterStatus, other_status: &mut CharacterStatus, skill: Skill) -> i32{
-    let (mut attack, mut defence, mut heal, mut mp, mut dmg, mut spl) : (i32, i32, i32, i32, i32, i32) = (0, 0, 0, 0, 0, 0);
+    let (mut attack, mut defence, mut heal, mut mp, mut dmg) : (i32, i32, i32, i32, i32) = (0, 0, 0, 0, 0);
     let mut rng = rand::thread_rng();
     // 行動種類
     match skill {
@@ -371,6 +371,7 @@ pub fn attack(own_status: &mut CharacterStatus, other_status: &mut CharacterStat
             defence = other_status.defence;
         },
         Skill::Spell(item) => {
+            let spl = [0, 1, 3, 6];
             match item {
                 Item::SpellHeal(lv) => {
                     mp = (10 * lv) as i32;
@@ -379,12 +380,12 @@ pub fn attack(own_status: &mut CharacterStatus, other_status: &mut CharacterStat
                 },
                 Item::SpellFire(lv) => {
                     mp = (25 * lv) as i32;
-                    heal = spl * 20;
+                    attack = spl[lv as usize] * 20;
                     defence = other_status.defence / 2;
                 },
                 Item::SpellIce(lv) => {
                     mp = (25 * lv) as i32;
-                    heal = spl * 15;
+                    attack = spl[lv as usize] * 15;
                     defence = 1;
                 },
                 _ => panic!("unexpected item")

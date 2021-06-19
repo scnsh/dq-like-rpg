@@ -43,7 +43,10 @@ fn main() {
         .add_state(GameState::default())
         .add_startup_system(systems::setup_cameras.system())
         .add_system(systems::print_keyboard_event.system())
-        .add_system(systems::input.system())
+        .add_system(systems::input.system()
+            .label(PlayerMovement::Input)
+            .before(PlayerMovement::Movement)
+        )
         .add_system_set(
             SystemSet::on_enter(GameState::Title)
                 .with_system(systems::setup_title_ui.system())
@@ -53,10 +56,6 @@ fn main() {
             SystemSet::on_update(GameState::Title)
                 .with_system(systems::gamestart_keyboard.system())
         )
-        // .add_system_set(
-        //     SystemSet::on_exit(GameState::Title)
-        //         .with_system(systems::cleanup_title_ui.system())
-        // )
         .add_system_set(
             SystemSet::on_enter(GameState::Loading)
                 .with_system(systems::setup.system())
@@ -90,8 +89,8 @@ fn main() {
         .add_system_set(
             SystemSet::on_update(GameState::Map)
                 .with_system(systems::animate_sprite_system.system())
-                .with_system(systems::translation_animation.system())
-                // .with_system(systems::translation.system())
+                .with_system(systems::translation_animation.system()
+                    .label(PlayerMovement::Movement))
                 .with_system(systems::update_status_ui.system())
                 .with_system(systems::update_inventory_ui.system())
                 .with_system(systems::map_event_listener.system())

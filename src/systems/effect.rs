@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::components::{EffectSpawnEvent, EffectKind, RenderLayer, Player, PlayerBattleState, render_layer, AssetHandles, EffectString};
+use crate::components::{EffectSpawnEvent, EffectKind, RenderLayer, Player, PlayerBattleState, render_layer, AssetHandles, EffectString, AudioEvent, AudioKind};
 use crate::resources::{GameState, ForState, Skill, Battle, Enemy};
 use rand::Rng;
 use bevy::math::Vec3Swizzles;
@@ -18,6 +18,7 @@ pub fn spawn_effect_event(
     mut windows: ResMut<Windows>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
+    mut audio_event_writer: EventWriter<AudioEvent>,
 ){
     let window = windows.get_primary_mut().unwrap();
     for event in event_reader.iter() {
@@ -115,7 +116,14 @@ pub fn spawn_effect_event(
                         ..Default::default()
                     });
                 });
-            //TODO: 音を鳴らす
+            if matches!(&event.is_player_attack, true){
+                if matches!(&event.kind, EffectKind::Heal){
+                    audio_event_writer.send(AudioEvent::Play(AudioKind::SEHeal));
+                }
+                else{
+                    audio_event_writer.send(AudioEvent::Play(AudioKind::SEAttack));
+                }
+            }
         }
     };
 }
@@ -173,11 +181,12 @@ pub fn handle_effect(
 }
 
 // Effectが残った状態で次の場面に切り替わらないように削除する
-pub fn clean_up_effect(
+pub fn clean_up_battle(
     mut commands: Commands,
     mut query: QuerySet<(
         Query<(Entity, &Effect, &TextureAtlasSprite, &Handle<TextureAtlas>)>,
         Query<(Entity, &Effect, &EffectString)>)>,
+    mut audio_event_writer: EventWriter<AudioEvent>,
 ){
     for (entity, _effect, _sprite, _texture_atlas_handle) in query.q0_mut().iter_mut() {
         commands.entity(entity).despawn_recursive();
@@ -185,4 +194,6 @@ pub fn clean_up_effect(
     for (entity, _effect, _string) in query.q1_mut().iter_mut() {
         commands.entity(entity).despawn_recursive();
     }
+    audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMBattleLast));
+    audio_event_writer.send(AudioEvent::Stop(AudioKind::SEAttack));
 }

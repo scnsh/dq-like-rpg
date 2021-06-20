@@ -7,6 +7,7 @@ pub fn setup_map_ui(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     inventory_query: Query<&Inventory, With<Player>>,
+    mut audio_event_writer: EventWriter<AudioEvent>,
 ){
     let inventory = inventory_query.single().unwrap();
     /// インベントリウインドウ
@@ -116,6 +117,8 @@ pub fn setup_map_ui(
                 });
         })
         .id();
+
+    audio_event_writer.send(AudioEvent::Play(AudioKind::BGMMap));
 }
 
 // ステータス画面(バトルインベントリ)を更新する
@@ -128,4 +131,10 @@ pub fn update_inventory_ui(
             text.sections[0].value = format!("{}", inventory);
         }
     }
+}
+
+pub fn clean_up_map(
+    mut audio_event_writer: EventWriter<AudioEvent>,
+){
+    audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMMap));
 }

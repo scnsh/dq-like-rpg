@@ -45,6 +45,7 @@ pub fn spawn_player(
 
     // 次の画面に遷移する
     game_state.set(GameState::Map).unwrap();
+
 }
 
 pub fn despawn_player(

@@ -6,6 +6,7 @@ use std::fmt;
 use std::fmt::Display;
 use crate::events::GameEvent;
 use std::collections::HashMap;
+use bevy_kira_audio::{AudioChannel, AudioSource};
 
 #[derive(Clone, Copy)]
 pub enum RenderLayer {
@@ -358,3 +359,68 @@ pub fn skill_to_effect(skill: Skill) -> EffectKind{
 }
 
 pub struct EffectString;
+
+pub struct AudioState {
+    pub audio_loaded: bool,
+    pub sound_handles: HashMap<AudioKind, Handle<AudioSource>>,
+    pub channels: HashMap<String, (AudioChannel, ChannelAudioState)>,
+}
+impl Default for AudioState {
+    fn default() -> Self {
+        AudioState{
+            audio_loaded: false,
+            sound_handles: HashMap::new(),
+            channels: HashMap::new()
+        }
+    }
+}
+impl AudioState {
+    pub fn get_channel(&mut self, kind: &AudioKind) -> Option<&mut (AudioChannel, ChannelAudioState)> {
+        match kind {
+            AudioKind::SEAttack | AudioKind::SEHeal | AudioKind::SETown => {
+                self.channels.get_mut("se")
+            },
+            _ => {
+                self.channels.get_mut("bgm")
+
+            }
+        }
+    }
+}
+
+pub struct ChannelAudioState {
+    pub stopped: bool,
+    pub paused: bool,
+    pub loop_started: bool,
+    pub volume: f32,
+}
+
+impl Default for ChannelAudioState {
+    fn default() -> Self {
+        ChannelAudioState {
+            volume: 1.0,
+            stopped: true,
+            loop_started: false,
+            paused: false,
+        }
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+pub enum AudioKind {
+    BGMMap,
+    BGMBattle,
+    BGMBattleLast,
+    BGMWin,
+    BGMLose,
+    SEAttack,
+    SEHeal,
+    SETown,
+}
+
+#[derive(Debug)]
+pub enum AudioEvent {
+    Play(AudioKind),
+    Pause(AudioKind),
+    Stop(AudioKind)
+}

@@ -17,11 +17,13 @@ use bevy::{
 };
 use bevy_tilemap::prelude::*;
 use crate::events::GameEvent;
+use bevy_kira_audio::AudioPlugin;
 
 fn main() {
     App::build()
         .add_event::<GameEvent>()
         .add_event::<EffectSpawnEvent>()
+        .add_event::<AudioEvent>()
         .insert_resource(WindowDescriptor {
             title: "RPG".to_string(),
             width: 1024.,
@@ -38,11 +40,14 @@ fn main() {
         .init_resource::<Inventory>()
         .init_resource::<Battle>()
         .init_resource::<RunState>()
+        .init_resource::<AudioState>()
         .add_plugins(DefaultPlugins)
         .add_plugins(TilemapDefaultPlugins) // TileMap用のデフォルトプラグイン
+        .add_plugin(AudioPlugin)
         .add_state(GameState::default())
         .add_startup_system(systems::setup_cameras.system())
         .add_system(systems::print_keyboard_event.system())
+        .add_system(systems::audio_event_listener.system())
         .add_system(systems::input.system()
             .label(PlayerMovement::Input)
             .before(PlayerMovement::Movement)
@@ -96,6 +101,10 @@ fn main() {
                 .with_system(systems::map_event_listener.system())
         )
         .add_system_set(
+            SystemSet::on_exit(GameState::Map)
+                .with_system(systems::clean_up_map.system())
+        )
+        .add_system_set(
             SystemSet::on_enter(GameState::Battle)
                 .with_system(systems::setup_status_ui.system())
                 .with_system(systems::setup_battle.system())
@@ -112,12 +121,16 @@ fn main() {
         )
         .add_system_set(
             SystemSet::on_exit(GameState::Battle)
-                .with_system(systems::clean_up_effect.system())
+                .with_system(systems::clean_up_battle.system())
         )
         .add_system_set(
             SystemSet::on_enter(GameState::Event)
                 .with_system(systems::setup_event_ui.system())
                 .with_system(systems::state_enter_despawn.system()),
+        )
+        .add_system_set(
+            SystemSet::on_exit(GameState::Event)
+                .with_system(systems::clean_up_event.system())
         )
         .run();
 }

@@ -12,7 +12,6 @@ pub fn translation_animation(
     enemy_data: Res<EnemyData>,
 ){
     if let Some((mut transform, mut position, mut map_camera)) = map_camera_query.iter_mut().next() {
-        println!("{0:?}, {1:?}, {2:?}", map_camera.state, map_camera.destination, position);
         let velocity = time.delta_seconds() * 3.;
         if map_camera.destination == *position{
             // 移動状態から停止状態に遷移
@@ -79,7 +78,6 @@ fn get_new_position(
     velocity: f32,
     destination: f32,
 ) -> f32 {
-    println!("{0}, {1}, {2}", position, velocity, destination);
     if velocity < 0.{
         return (position + velocity).clamp(destination, position);
     }

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::camera::RenderLayers;
 use crate::events::*;
-use crate::components::{BattleCamera, Position, render_layer, RenderLayer, AssetHandles, Player, position_to_translation, UiBattle, CharacterStatus, MapField, position_to_field, MapCamera, UiStatusEnemyText, UiMap, UiStatusInventoryText, Inventory};
+use crate::components::{BattleCamera, Position, render_layer, RenderLayer, AssetHandles, Player, position_to_translation, UiBattle, CharacterStatus, MapField, position_to_field, MapCamera, UiStatusEnemyText, UiMap, UiStatusInventoryText, Inventory, AudioEvent, AudioKind};
 use crate::resources::{Battle, Enemy, Map, ForState, GameState, EnemyData, Skill, Item};
 use core::cmp;
 use bevy::render::renderer::RenderResource;
@@ -19,7 +19,8 @@ pub fn setup_battle(
     inventory_query: Query<&Inventory, With<Player>>,
     map: Res<Map>,
     enemy_data: Res<EnemyData>,
-    player_query: Query<&CharacterStatus, With<Player>>
+    player_query: Query<&CharacterStatus, With<Player>>,
+    mut audio_event_writer: EventWriter<AudioEvent>,
 ){
     // 参考
     // https://github.com/StarArawn/bevy_roguelike_prototype/blob/main/src/game/gameplay/scenes/battle.rs
@@ -324,6 +325,13 @@ pub fn setup_battle(
                 });
         })
         .id();
+
+    if matches!(enemy, Enemy::Boss){
+        audio_event_writer.send(AudioEvent::Play(AudioKind::BGMBattleLast));
+    }
+    else{
+        audio_event_writer.send(AudioEvent::Play(AudioKind::BGMBattle));
+    }
 }
 
 // ステータス画面(エネミー)を更新する

@@ -55,6 +55,6 @@ pub fn spawn_map_entity(
 
     // tilemapをワールドに追加
     commands
-        .spawn_bundle(tilemap_components);
-        // .insert(GameState::MapView);
+        .spawn_bundle(tilemap_components)
+        .insert(TileMap);
 }

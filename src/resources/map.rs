@@ -16,7 +16,7 @@ impl Map {
     pub fn got_item(&mut self, pos: (i32, i32)) {
         let mut town = self.fields.get(&pos).unwrap();
         match town{
-            MapField::Town{item, visited} => {
+            MapField::Town{item, visited} =>{
                 self.fields.insert(pos, MapField::Town{item:*item, visited: true});
             }
             _ => panic!("got item should be called on 'Town' MapField")

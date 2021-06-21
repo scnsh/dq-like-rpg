@@ -16,6 +16,7 @@ pub fn input(
     runstate: Res<RunState>,
     enemy_data: Res<EnemyData>,
     mut effect_spawn_events: EventWriter<EffectSpawnEvent>,
+    mut tilemap: Query<(Entity, &TileMap)>,
 ) {
     if state.current() == &GameState::Map {
         if let Some((mut map_camera, mut position)) = player_camera_query.iter_mut().next() {
@@ -149,6 +150,10 @@ pub fn input(
                 GameEvent::Lose => {
                     // Playerを削除する
                     for (_player_camera, _inventory, _player, entity) in player_query.iter_mut() {
+                        commands.entity(entity).despawn_recursive();
+                    }
+                    // Tilemapを削除する
+                    for (entity, _tilemap) in tilemap.iter_mut() {
                         commands.entity(entity).despawn_recursive();
                     }
                     state.set(GameState::Title).unwrap();

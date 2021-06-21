@@ -271,7 +271,7 @@ impl MapField {
             MapField::Mountain => 2,
             MapField::Water => 3,
             MapField::Town{ item, visited} => 4,
-            MapField::Castle => 4,
+            MapField::Castle => 5,
         }
     }
 }
@@ -432,3 +432,5 @@ pub enum AudioEvent {
     Pause(AudioKind),
     Stop(AudioKind)
 }
+
+pub struct TileMap;

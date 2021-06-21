@@ -23,7 +23,11 @@ pub fn setup(
     asset_handles.battle_effects = HashMap::new();
     asset_handles.battle_effects.insert(EffectKind::Attack, (asset_server.load("images/effects/sword.png").clone(), 5));
     asset_handles.battle_effects.insert(EffectKind::Heal, (asset_server.load("images/effects/heal.png").clone(), 8));
-    asset_handles.battle_effects.insert(EffectKind::Spell, (asset_server.load("images/effects/fire.png").clone(), 8));
+    asset_handles.battle_effects.insert(EffectKind::Fire, (asset_server.load("images/effects/fire.png").clone(), 8));
+    asset_handles.battle_effects.insert(EffectKind::Ice, (asset_server.load("images/effects/ice.png").clone(), 8));
+    asset_handles.battle_effects.insert(EffectKind::Death, (asset_server.load("images/effects/death.png").clone(), 8));
+    asset_handles.battle_effects.insert(EffectKind::Arrow, (asset_server.load("images/effects/arrow.png").clone(), 9));
+    asset_handles.battle_effects.insert(EffectKind::Wind, (asset_server.load("images/effects/wind.png").clone(), 8));
 
     // 敵のtextureを読み込む
     asset_handles.enemies = Vec::new();

@@ -337,7 +337,11 @@ impl Inventory {
 pub enum EffectKind {
     Attack,
     Heal,
-    Spell
+    Fire,
+    Ice,
+    Death,
+    Arrow,
+    Wind,
 }
 pub struct EffectSpawnEvent {
     pub kind: EffectKind,
@@ -347,11 +351,15 @@ pub struct EffectSpawnEvent {
 
 pub fn skill_to_effect(skill: Skill) -> EffectKind{
     match skill {
-        Skill::Sword | Skill::Wind | Skill::Death | Skill::Arrow => EffectKind::Attack,
+        Skill::Sword => EffectKind::Attack,
+        Skill::Wind => EffectKind::Wind,
+        Skill::Arrow => EffectKind::Arrow,
+        Skill::Death => EffectKind::Death,
         Skill::Spell(item) => {
             match item {
                 Item::SpellHeal(lv) => EffectKind::Heal,
-                Item::SpellFire(lv) | Item::SpellIce(lv) => EffectKind::Spell,
+                Item::SpellFire(lv) => EffectKind::Fire,
+                Item::SpellIce(lv) => EffectKind::Ice,
                 _ => panic!("select item cannot use.")
             }
         },

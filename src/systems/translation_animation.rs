@@ -3,6 +3,7 @@ use crate::resources::*;
 use crate::components::*;
 use rand::Rng;
 use crate::events::GameEvent;
+use bevy_tilemap::{Tilemap, Tile};
 
 pub fn translation_animation(
     time: Res<Time>,
@@ -10,6 +11,7 @@ pub fn translation_animation(
     mut events_writer: EventWriter<GameEvent>,
     map: Res<Map>,
     enemy_data: Res<EnemyData>,
+    mut mini_tilemap_query: Query<&mut Tilemap, With<MiniMap>>
 ){
     if let Some((mut transform, mut position, mut map_camera)) = map_camera_query.iter_mut().next() {
         let velocity = time.delta_seconds() * 3.;
@@ -50,24 +52,41 @@ pub fn translation_animation(
             }
             // 位置を更新する
             if let move_direction = map_camera.direction{
-                match move_direction {
-                    MoveDirection::Left => {
-                        position.x = get_new_position(position.x, -velocity, map_camera.destination.x);
-                    },
-                    MoveDirection::Right => {
-                        position.x = get_new_position(position.x, velocity, map_camera.destination.x);
-                    },
-                    MoveDirection::Up => {
-                        position.y = get_new_position(position.y, velocity, map_camera.destination.y);
-                    },
-                    MoveDirection::Down => {
-                        position.y = get_new_position(position.y, -velocity, map_camera.destination.y);
-                    },
-                    _ => {}
+                if let Some(mut tilemap) = mini_tilemap_query.iter_mut().next() {
+                    // 移動元を戻す
+                    let field = position_to_field(&map, &position);
+                    tilemap.insert_tile(Tile {
+                        point: (position.x as i32, position.y as i32),
+                        sprite_index: field.sprite_index(),
+                        ..Default::default()
+                    });
+
+                    match move_direction {
+                        MoveDirection::Left => {
+                            position.x = get_new_position(position.x, -velocity, map_camera.destination.x);
+                        },
+                        MoveDirection::Right => {
+                            position.x = get_new_position(position.x, velocity, map_camera.destination.x);
+                        },
+                        MoveDirection::Up => {
+                            position.y = get_new_position(position.y, velocity, map_camera.destination.y);
+                        },
+                        MoveDirection::Down => {
+                            position.y = get_new_position(position.y, -velocity, map_camera.destination.y);
+                        },
+                        _ => {}
+                    }
+                    // info!("{0:?}, {1:?}",position, map_camera.destination);
+                    *transform =
+                        position_to_translation(&map, &position, transform.translation.z);
+
+                    // 移動先を更新する
+                    tilemap.insert_tile(Tile {
+                        point: (position.x as i32, position.y as i32),
+                        sprite_index: MapField::Player.sprite_index(),
+                        ..Default::default()
+                    });
                 }
-                // info!("{0:?}, {1:?}",position, map_camera.destination);
-                *transform =
-                    position_to_translation(&map, &position, transform.translation.z);
             }
         }
     }

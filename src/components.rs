@@ -246,6 +246,7 @@ pub enum MoveDirection {
 #[derive(Default, Clone)]
 pub struct AssetHandles {
     pub tilemap: Handle<Texture>,
+    pub mini_tilemap: Handle<Texture>,
     pub player: Handle<Texture>,
     pub battle_background: Handle<Texture>,
     pub battle_effects: HashMap<EffectKind, (Handle<Texture>, usize)>,
@@ -261,10 +262,12 @@ pub enum MapField {
     Mountain,
     Water,
     Town{item: Item, visited: bool},
-    Castle
+    Castle,
+    Player, // for minimap
+    Blink, // for minimap
 }
 impl MapField {
-    pub fn sprint_index(&self) -> usize {
+    pub fn sprite_index(&self) -> usize {
         match &self {
             MapField::Grass => 0,
             MapField::Forest => 1,
@@ -272,6 +275,8 @@ impl MapField {
             MapField::Water => 3,
             MapField::Town{ item, visited} => 4,
             MapField::Castle => 5,
+            MapField::Player => 6,
+            MapField::Blink => 7,
         }
     }
 }
@@ -434,3 +439,4 @@ pub enum AudioEvent {
 }
 
 pub struct TileMap;
+pub struct MiniMap;

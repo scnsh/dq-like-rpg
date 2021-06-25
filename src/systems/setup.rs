@@ -13,6 +13,7 @@ pub fn setup(
 
     // map作成用の texture atlas を読み込む
     asset_handles.tilemap = asset_server.load("images/tiles/land.png").clone();
+    asset_handles.mini_tilemap = asset_server.load("images/tiles/miniland.png").clone();
 
     // プレイヤー用の texture を読み込む
     asset_handles.player = asset_server.load("images/player/you.png").clone();

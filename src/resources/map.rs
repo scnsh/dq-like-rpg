@@ -5,6 +5,7 @@ use bevy::sprite::collide_aabb::collide;
 
 pub const MAP_SIZE: [u32; 2] = [64, 48];
 pub const MAP_TEXTURE_SIZE: [u32; 2]  = [16, 16];
+pub const CHUNK_SIZE: [u32; 2]  = [3, 3];
 
 #[derive(Default)]
 pub struct Map {

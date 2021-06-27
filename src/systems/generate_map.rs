@@ -9,47 +9,39 @@ use std::collections::{HashMap, HashSet};
 use strum::IntoEnumIterator;
 
 pub fn generate_map(
-    // mut commands: Commands,
-    // assert_server: Res<AssetServer>,
-    // mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut map: ResMut<Map>,
     mut tilemap_query: QuerySet<(
         Query<(&mut Tilemap, Without<MiniMap>)>,
         Query<(&mut Tilemap, With<MiniMap>)>)>
 ){
     // chunkの縦・横のサイズを取得
-    let chunk_width = MAP_SIZE[0] as i32;
-    let chunk_height = MAP_SIZE[1] as i32;
+    let width = MAP_SIZE[0] as i32;
+    let height = MAP_SIZE[1] as i32;
+
 
     // ワールド全体をgrassで埋める
-    let mut fields = HashMap::with_capacity((chunk_width * chunk_height) as usize);
-    for y in 0..chunk_height {
-        for x in 0..chunk_width {
+    let mut fields = HashMap::with_capacity((width * height) as usize);
+    for y in 0..height {
+        for x in 0..width {
             // -chunk_width/2 < x < chunk_width/2,  -chunk_height/2 < y < chunk_height/2
-            let pos = (x - chunk_width / 2,
-                       y - chunk_height / 2); // -chunk_height/2 < y < chunk_height/2
+            let pos = (x - width / 2,
+                       y - height / 2); // -chunk_height/2 < y < chunk_height/2
             // デフォルトの tile set の z-order は 0
             // // 小さい方が他よりも後ろにレンダリングされ, 0 は 最後尾 で 背景に使うのが最適
-            // let tile = Tile {
-            //     point: pos, // tileの座標
-            //     sprite_index: MapField::Grass as usize, // grassのindex
-            //     ..Default::default()
-            // };
-            // tiles.push(tile);
             fields.insert(pos, MapField::Grass);
         }
     }
 
     // 山・森・水を配置する
     let mut rng = rand::thread_rng();
-    let left = &chunk_width / 2 - 1;
-    let right = -&chunk_width / 2;
-    let top = &chunk_height / 2 - 1;
-    let bottom = -&chunk_height / 2;
-    for y in 0..chunk_height {
-        for x in 0..chunk_width {
-            let pos = (x - chunk_width / 2,
-                       y - chunk_height / 2); // -chunk_height/2 < y < chunk_height/2
+    let left = &width / 2 - 1;
+    let right = -&width / 2;
+    let top = &height / 2 - 1;
+    let bottom = -&height / 2;
+    for y in 0..height {
+        for x in 0..width {
+            let pos = (x - width / 2,
+                       y - height / 2); // -chunk_height/2 < y < chunk_height/2
             // 1/60 の確率で山生成開始
             if rng.gen_bool(1./60.) {
                 // 山の散布回数
@@ -57,26 +49,21 @@ pub fn generate_map(
                 for i in 0..max {
                     // ランダム移動で山を生成
                     let pos = (
-                        (pos.0 + rng.gen_range(-3, 4)).clamp( -&chunk_width / 2, &chunk_width / 2 - 1),
-                        (pos.1 + rng.gen_range(-3, 4)).clamp( -&chunk_height / 2, &chunk_height / 2 - 1));
+                        (pos.0 + rng.gen_range(-3, 4)).clamp(-&width / 2, &width / 2 - 1),
+                        (pos.1 + rng.gen_range(-3, 4)).clamp(-&height / 2, &height / 2 - 1));
                     fields.insert(pos, MapField::Mountain);
                 }
             }
             // 1/12 で水
-            if rng.gen_bool(1./12.) {
-                fields.insert(pos, MapField::Water);
+            // マップ端には作らないように(ワープした先が水にならないように)
+            if 0 < y && y < height-1 && 0 < x && x < width-1{
+                if rng.gen_bool(1./12.) {
+                    fields.insert(pos, MapField::Water);
+                }
             }
             // 1/6 で森
             if rng.gen_bool(1./6.) {
                 fields.insert(pos, MapField::Forest);
-            }
-
-            // 端は水
-            if pos.0 == left || pos.0 == right {
-                fields.insert(pos, MapField::Water);
-            }
-            if pos.1 == top || pos.1 == bottom{
-                fields.insert(pos, MapField::Water);
             }
         }
     }
@@ -90,14 +77,14 @@ pub fn generate_map(
     }
 
     // 敵城の生成 マップ周縁(0.8 ~ 1.0、0~0.2の比率)に生成
-    let castle_x = (chunk_width as f32 * rng_multi_range((0.05, 0.2), (0.8, 0.95))) as i32 - chunk_width / 2;
-    let castle_y = (chunk_height as f32 * rng_multi_range((0.05, 0.2), (0.8, 0.95))) as i32 - chunk_height / 2;
+    let castle_x = (width as f32 * rng_multi_range((0.05, 0.2), (0.8, 0.95))) as i32 - width / 2;
+    let castle_y = (height as f32 * rng_multi_range((0.05, 0.2), (0.8, 0.95))) as i32 - height / 2;
     fields.insert((castle_x, castle_y), MapField::Castle);
 
     // 街の生成 開始位置を避けて (0.55~1.0, 0~0.45の比率)に生成
     for item in generate_items() {
-        let town_x = (chunk_width as f32 * rng_multi_range((0.05, 0.45), (0.55, 0.95))) as i32 - chunk_width / 2;
-        let town_y = (chunk_height as f32 * rng_multi_range((0.05, 0.45), (0.55, 0.95))) as i32 - chunk_height / 2;
+        let town_x = (width as f32 * rng_multi_range((0.05, 0.45), (0.55, 0.95))) as i32 - width / 2;
+        let town_y = (height as f32 * rng_multi_range((0.05, 0.45), (0.55, 0.95))) as i32 - height / 2;
         match fields[&(town_x, town_y)] {
             // 街や城と重複した場合は追加しない
             MapField::Town{item, visited } => continue,
@@ -113,15 +100,25 @@ pub fn generate_map(
     map.collisions = HashSet::new();
     map.fields = HashMap::new();
     for (pos, field) in fields.iter_mut() {
+        // マップ外にも描画する
+        for x in 0..CHUNK_SIZE[0] as i32 {
+            for y in 0..CHUNK_SIZE[1] as i32 {
+                let y = y - CHUNK_SIZE[1] as i32 / 2;
+                let x = x - CHUNK_SIZE[0] as i32 / 2;
+                let mut tile = Tile {
+                    point: (pos.0 + x * MAP_SIZE[0] as i32, pos.1 + y * MAP_SIZE[1] as i32),
+                    sprite_index: field.sprite_index(),
+                    ..Default::default()
+                };
+
+                tiles.push(tile.clone());
+            }
+        }
         let mut tile = Tile {
             point: pos.clone(),
-            sprite_index: field.sprite_index(),
+            sprite_index: if pos.0 == 0 && pos.1 == 0 { MapField::Player.sprite_index() } else {field.sprite_index()},
             ..Default::default()
         };
-        tiles.push(tile.clone());
-        if pos.0 == 0 && pos.1 == 0 {
-            tile.sprite_index = MapField::Player.sprite_index();
-        }
         mini_tiles.push(tile.clone());
         map.fields.insert(pos.clone(), field.clone());
         if matches!(field, MapField::Water){
@@ -133,33 +130,30 @@ pub fn generate_map(
             _ => {}
         }
     }
-    map.width = chunk_width as u32;
-    map.height = chunk_height as u32;
+    map.width = width as u32;
+    map.height = height as u32;
     map.tile_size = MAP_TEXTURE_SIZE[0] as f32; // 正方形を仮定
 
     if let Some((mut tilemap, _without)) = tilemap_query.q0_mut().iter_mut().next(){
-        // `auto_chunk` を builder で実行していないので手動でchunkを追加する必要がある
-        // chunk は 1つ
-        if !tilemap.contains_chunk((0,0)){
-            tilemap.insert_chunk((0, 0)).unwrap();
-        }
-
         // TileMapにTileを追加
         tilemap.insert_tiles(tiles).unwrap();
 
         // ワールドに追加
+        tilemap.spawn_chunk((-1, 0)).unwrap();
         tilemap.spawn_chunk((0, 0)).unwrap();
+        tilemap.spawn_chunk((1, 0)).unwrap();
+        tilemap.spawn_chunk((-1, 1)).unwrap();
+        tilemap.spawn_chunk((0, 1)).unwrap();
+        tilemap.spawn_chunk((1, 1)).unwrap();
+        tilemap.spawn_chunk((-1, -1)).unwrap();
+        tilemap.spawn_chunk((0, -1)).unwrap();
+        tilemap.spawn_chunk((1, -1)).unwrap();
     }
 
     if let Some((mut tilemap, _with)) = tilemap_query.q1_mut().iter_mut().next(){
-        if !tilemap.contains_chunk((0,0)){
-            tilemap.insert_chunk((0, 0)).unwrap();
-        }
-
         // TileMapにTileを追加
         tilemap.insert_tiles(mini_tiles).unwrap();
 
-        println!("spawn minimap");
         // ワールドに追加
         tilemap.spawn_chunk((0, 0)).unwrap();
     }

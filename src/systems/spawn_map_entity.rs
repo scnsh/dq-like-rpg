@@ -19,9 +19,9 @@ pub fn spawn_map_entity(
 
     // タイルマップの構成を決定
     let tilemap = Tilemap::builder()
-        // .auto_chunk() // spawnする際に新しいchunkとして生成する
+        .auto_chunk() // spawnする際に新しいchunkとして生成する
         .topology(GridTopology::Square) // tilemap の構成
-        .dimensions(1, 1) // tilemap の数
+        .dimensions(CHUNK_SIZE[0], CHUNK_SIZE[1]) // tilemap の数
         .chunk_dimensions(MAP_SIZE[0], MAP_SIZE[1], 1) // chunk_mapの数
         .texture_dimensions(MAP_TEXTURE_SIZE[0], MAP_TEXTURE_SIZE[1]) // タイルのサイズ(px)
         .add_layer(
@@ -64,6 +64,7 @@ pub fn spawn_map_entity(
     let atlas_handle = texture_atlases.add(texture_atlas);
 
     let mini_tilemap = Tilemap::builder()
+        .auto_chunk() // spawnする際に新しいchunkとして生成する
         .topology(GridTopology::Square)
         .dimensions(1, 1)
         .chunk_dimensions(MAP_SIZE[0], MAP_SIZE[1], 1)

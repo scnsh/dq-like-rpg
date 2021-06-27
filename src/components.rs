@@ -52,7 +52,9 @@ pub fn position_to_field(
 ) -> MapField {
     match map.fields.get(&(point.x as i32, point.y as i32)){
         Some(field) => field.clone(),
-        _ => panic!()
+        _ => {
+            panic!();
+        }
     }
 }
 

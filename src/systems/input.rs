@@ -11,7 +11,7 @@ pub fn input(
     mut state: ResMut<State<GameState>>,
     mut events: EventWriter<GameEvent>,
     mut player_query: Query<(&mut CharacterStatus, &mut Inventory, &mut Player, Entity)>,
-    mut player_camera_query: Query<(&mut MapCamera, &mut Position)>,
+    mut player_camera_query: Query<(&mut MapCamera, &mut Transform, &mut Position)>,
     mut battle: ResMut<Battle>,
     runstate: Res<RunState>,
     enemy_data: Res<EnemyData>,
@@ -19,7 +19,7 @@ pub fn input(
     mut tilemap: Query<(Entity, &TileMap)>,
 ) {
     if state.current() == &GameState::Map {
-        if let Some((mut map_camera, mut position)) = player_camera_query.iter_mut().next() {
+        if let Some((mut map_camera, mut transform, mut position)) = player_camera_query.iter_mut().next() {
             // キーボード操作の入力を受け取る
             let direction = if keyboard_input.just_pressed(KeyCode::Up) {
                 MoveDirection::Up
@@ -52,6 +52,37 @@ pub fn input(
                     map_camera.destination = new_position;
                     // events.send(GameEvent::PlayerMoved);
                 }
+                let width = MAP_SIZE[0] as f32;
+                let height = MAP_SIZE[1] as f32;
+                let left = &width / 2. - 1.;
+                let right = -&width / 2.;
+                let top = &height / 2. - 1.;
+                let bottom = -&height / 2.;
+                if new_position.x > left {
+                    map_camera.destination = Position {x:right as f32, y:new_position.y};
+                    *position = Position {x:right-1 as f32, y:new_position.y};
+                    *transform =
+                        position_to_translation(&_map, &position, transform.translation.z);
+                }
+                if new_position.x < right {
+                    map_camera.destination = Position {x:left as f32, y:new_position.y};
+                    *position = Position {x:left+1 as f32, y:new_position.y};
+                    *transform =
+                        position_to_translation(&_map, &position, transform.translation.z);
+                }
+                if new_position.y > top {
+                    map_camera.destination = Position {x:new_position.x as f32, y:bottom};
+                    *position = Position {x:new_position.x, y:bottom-1 as f32};
+                    *transform =
+                        position_to_translation(&_map, &position, transform.translation.z);
+                }
+                if new_position.y < bottom {
+                    map_camera.destination = Position {x:new_position.x as f32, y:top};
+                    *position = Position {x:new_position.x, y:top+1 as f32};
+                    *transform =
+                        position_to_translation(&_map, &position, transform.translation.z);
+                }
+                println!("{0}", map_camera.destination.x);
             }
 
             // デバッグ機能

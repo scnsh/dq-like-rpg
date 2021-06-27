@@ -91,9 +91,6 @@ impl Default for MapCamera {
     }
 }
 
-// マップ画面のUIに使うエンティティ
-pub struct UiMap;
-
 // ステータス画面のテキスト
 pub struct UiStatusPlayerText;
 // 敵画面のテキスト

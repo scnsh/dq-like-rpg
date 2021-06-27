@@ -11,8 +11,6 @@ bevy = "0.5"
 bevy_tilemap = "0.4"
 bevy_egui = "0.5"
 rand = "0.7.3"
-strum = "0.21"
-strum_macros = "0.21"
 bevy_kira_audio = { version = "0.5.1", features=["mp3"]}
 
 [patch.crates-io]

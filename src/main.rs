@@ -100,7 +100,6 @@ fn main() {
                         .label(PlayerMovement::Movement),
                 )
                 .with_system(systems::update_status_ui.system())
-                .with_system(systems::update_inventory_ui.system())
                 .with_system(systems::map_event_listener.system()),
         )
         .add_system_set(

@@ -124,18 +124,6 @@ pub fn setup_map_ui(
     audio_event_writer.send(AudioEvent::Play(AudioKind::BGMMap));
 }
 
-// ステータス画面(バトルインベントリ)を更新する
-pub fn update_inventory_ui(
-    query: Query<&Inventory, (With<Player>, Changed<Inventory>)>,
-    mut queries: Query<&mut Text, (With<UiStatusInventoryText>, With<UiMap>)>,
-) {
-    for inventory in query.iter() {
-        for mut text in queries.iter_mut() {
-            text.sections[0].value = format!("{}", inventory);
-        }
-    }
-}
-
 pub fn clean_up_map(mut audio_event_writer: EventWriter<AudioEvent>) {
     audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMMap));
 }

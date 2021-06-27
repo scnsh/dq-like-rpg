@@ -1,9 +1,8 @@
 use crate::resources::Skill;
 use std::fmt;
 use std::fmt::Display;
-use strum_macros::EnumIter;
 
-#[derive(EnumIter, Clone, Eq, PartialEq, Copy, Debug, Hash)]
+#[derive(Clone, Eq, PartialEq, Copy, Debug, Hash)]
 pub enum Item {
     SpellHeal(u32),
     SpellFire(u32),

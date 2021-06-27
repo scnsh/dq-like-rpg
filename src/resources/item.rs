@@ -1,7 +1,6 @@
+use crate::resources::Skill;
 use std::fmt;
 use std::fmt::Display;
-use crate::resources::Skill;
-use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 #[derive(EnumIter, Clone, Eq, PartialEq, Copy, Debug, Hash)]
@@ -31,21 +30,28 @@ impl Item {
             Self::SpellFire(lv) => Some(Skill::Spell(Item::SpellFire(*lv))),
             Self::SpellHeal(lv) => Some(Skill::Spell(Item::SpellHeal(*lv))),
             Self::SpellIce(lv) => Some(Skill::Spell(Item::SpellIce(*lv))),
-            _ => None
+            _ => None,
         }
     }
 }
 
 pub fn generate_items() -> Vec<Item> {
-    vec![Item::SpellHeal(1), Item::SpellHeal(2), Item::SpellHeal(3),
-         Item::SpellFire(1), Item::SpellFire(2), Item::SpellFire(3),
-         Item::SpellIce(1), Item::SpellIce(2), Item::SpellIce(3),
-         Item::IronBody,
-         Item::IronArm,
-         Item::IronLeg,
-         Item::IronHead,
-         Item::HeroSword,
-         Item::WisdomRing,
-         Item::FairyShield,
+    vec![
+        Item::SpellHeal(1),
+        Item::SpellHeal(2),
+        Item::SpellHeal(3),
+        Item::SpellFire(1),
+        Item::SpellFire(2),
+        Item::SpellFire(3),
+        Item::SpellIce(1),
+        Item::SpellIce(2),
+        Item::SpellIce(3),
+        Item::IronBody,
+        Item::IronArm,
+        Item::IronLeg,
+        Item::IronHead,
+        Item::HeroSword,
+        Item::WisdomRing,
+        Item::FairyShield,
     ]
 }

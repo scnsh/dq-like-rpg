@@ -1,12 +1,11 @@
-use bevy::prelude::*;
-use crate::components::*;
 use crate::resources::{ForState, GameState};
+use bevy::prelude::*;
 
 pub fn setup_title_ui(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-){
+) {
     // 親ノード
     commands
         .spawn_bundle(NodeBundle {
@@ -47,27 +46,28 @@ pub fn setup_title_ui(
                 })
                 .with_children(|parent| {
                     // テキスト
-                    parent.spawn_bundle(TextBundle {
-                        style: Style {
-                            margin: Rect::all(Val::Px(5.)),
-                            // Horizontal方向の中央揃え
-                            align_self: AlignSelf::Center,
-                            ..Default::default()
-                        },
-                        text: Text::with_section(
-                            "DQ-like RPG",
-                            TextStyle {
-                                font: asset_server.load("fonts/PixelMplus12-Regular.ttf"),
-                                font_size: 80.0,
-                                color: Color::WHITE,
+                    parent
+                        .spawn_bundle(TextBundle {
+                            style: Style {
+                                margin: Rect::all(Val::Px(5.)),
+                                // Horizontal方向の中央揃え
+                                align_self: AlignSelf::Center,
+                                ..Default::default()
                             },
-                            Default::default()
-                        ),
-                        ..Default::default()
-                    })
-                    .insert(ForState {
-                        states: vec![GameState::Title],
-                    });
+                            text: Text::with_section(
+                                "DQ-like RPG",
+                                TextStyle {
+                                    font: asset_server.load("fonts/PixelMplus12-Regular.ttf"),
+                                    font_size: 80.0,
+                                    color: Color::WHITE,
+                                },
+                                Default::default(),
+                            ),
+                            ..Default::default()
+                        })
+                        .insert(ForState {
+                            states: vec![GameState::Title],
+                        });
                 });
             parent
                 .spawn_bundle(NodeBundle {
@@ -88,28 +88,28 @@ pub fn setup_title_ui(
                 })
                 .with_children(|parent| {
                     // テキスト
-                    parent.spawn_bundle(TextBundle {
-                        style: Style {
-                            margin: Rect::all(Val::Px(5.)),
-                            // Horizontal方向の中央揃え
-                            align_self: AlignSelf::Center,
-                            ..Default::default()
-                        },
-                        text: Text::with_section(
-                            "Press 'Space' to start",
-                            TextStyle {
-                                font: asset_server.load("fonts/PixelMplus12-Regular.ttf"),
-                                font_size: 80.0,
-                                color: Color::WHITE,
+                    parent
+                        .spawn_bundle(TextBundle {
+                            style: Style {
+                                margin: Rect::all(Val::Px(5.)),
+                                // Horizontal方向の中央揃え
+                                align_self: AlignSelf::Center,
+                                ..Default::default()
                             },
-                            Default::default()
-                        ),
-                        ..Default::default()
-                    })
-                    .insert(ForState {
-                        states: vec![GameState::Title],
-                    });
+                            text: Text::with_section(
+                                "Press 'Space' to start",
+                                TextStyle {
+                                    font: asset_server.load("fonts/PixelMplus12-Regular.ttf"),
+                                    font_size: 80.0,
+                                    color: Color::WHITE,
+                                },
+                                Default::default(),
+                            ),
+                            ..Default::default()
+                        })
+                        .insert(ForState {
+                            states: vec![GameState::Title],
+                        });
                 });
-
         });
 }

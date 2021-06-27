@@ -1,7 +1,6 @@
-use bevy::{prelude::*, render::camera::RenderLayers};
 use crate::components::*;
 use crate::resources::*;
-
+use bevy::{prelude::*, render::camera::RenderLayers};
 
 pub fn spawn_player(
     mut commands: Commands,
@@ -10,12 +9,12 @@ pub fn spawn_player(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut camera_query: Query<(Entity, &mut Transform, &mut Position, &mut MapCamera)>,
     mut game_state: ResMut<State<GameState>>,
-){
+) {
     for (camera, mut transform, mut position, mut map_camera) in camera_query.iter_mut() {
         // カメラ位置をリセットする(GameOver後のリスタートも想定する)
-        *transform = position_to_translation(&map, &Position{x:0.,y:0.},
-                                                   transform.translation.z);
-        *position = Position{x:0., y:0.};
+        *transform =
+            position_to_translation(&map, &Position { x: 0., y: 0. }, transform.translation.z);
+        *position = Position { x: 0., y: 0. };
         *map_camera = MapCamera::default();
 
         // 主人公を追加する
@@ -27,13 +26,19 @@ pub fn spawn_player(
         // let position = Position { x: 0, y: 0 };
         // let transform = position_to_translation(&map, &position, render_layer(RenderLayer::Player) as f32);
         let player = commands
-            .spawn_bundle(SpriteSheetBundle{
+            .spawn_bundle(SpriteSheetBundle {
                 texture_atlas: texture_atlas_handle,
-                transform: Transform::from_xyz(0., 0., -transform.translation.z + render_layer(RenderLayer::Player) as f32),
+                transform: Transform::from_xyz(
+                    0.,
+                    0.,
+                    -transform.translation.z + render_layer(RenderLayer::Player) as f32,
+                ),
                 ..Default::default()
             })
             .insert(RenderLayers::layer(0))
-            .insert(Player{battle_state: PlayerBattleState::Select})
+            .insert(Player {
+                battle_state: PlayerBattleState::Select,
+            })
             .insert(CharacterStatus::default())
             .insert(Inventory::default())
             // .insert(position)
@@ -42,17 +47,6 @@ pub fn spawn_player(
         commands.entity(camera).push_children(&[player]);
     }
 
-
     // 次の画面に遷移する
     game_state.set(GameState::Map).unwrap();
-
-}
-
-pub fn despawn_player(
-    mut commands: Commands,
-    player_query: Query<Entity, With<Player>>,
-){
-    for entity in player_query.iter(){
-        commands.entity(entity).despawn_recursive();
-    }
 }

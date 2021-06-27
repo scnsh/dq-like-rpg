@@ -40,7 +40,7 @@ pub enum SnakeMovement {
 ///
 
 #[derive(Default, Copy, Clone, Eq, PartialEq, Hash)]
-struct Position{
+struct Position {
     x: i32,
     y: i32,
 }
@@ -64,7 +64,6 @@ struct SnakeHead {
     direction: Direction,
 }
 
-
 struct SnakeSegment;
 // 体(セグメント)のリストを保存する
 #[derive(Default)]
@@ -82,7 +81,6 @@ struct LastTailPosition(Option<Position>);
 
 struct GameOverEvent;
 
-
 // リソース、マテリアルを保持して、頭や体、餌などにも使う
 struct Materials {
     head_material: Handle<ColorMaterial>,
@@ -95,9 +93,7 @@ struct Materials {
 ///
 
 // 起動時のセットアップ
-fn setup(mut commands: Commands,
-         mut materials: ResMut<Assets<ColorMaterial>>)
-{
+fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
     // 2D用カメラを追加する
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     // マテリアルを作成する
@@ -106,7 +102,7 @@ fn setup(mut commands: Commands,
         // materials.add が Handle<ColorMaterial> を返す
         head_material: materials.add(Color::rgb(0.7, 0.7, 0.7).into()),
         segment_material: materials.add(Color::rgb(0.3, 0.3, 0.3).into()),
-        food_material: materials.add(Color::rgb(1.0, 0.0, 1.0).into())
+        food_material: materials.add(Color::rgb(1.0, 0.0, 1.0).into()),
     });
 }
 
@@ -126,19 +122,19 @@ fn spawn_snake(
                 sprite: Sprite::new(Vec2::new(10.0, 10.0)),
                 ..Default::default()
             })
-            .insert(SnakeHead{
+            .insert(SnakeHead {
                 direction: Direction::Up, // 開始時は上向き
             })
             .insert(SnakeSegment)
             // 場所を指定する
-            .insert(Position {x: 3, y: 3})
+            .insert(Position { x: 3, y: 3 })
             .insert(Size::square(0.8))
             .id(),
         //2つ目は spawn_segmentから作られる
         spawn_segment(
             commands,
             &materials.segment_material,
-            Position { x: 3, y: 2},
+            Position { x: 3, y: 2 },
         ),
     ];
 }
@@ -175,7 +171,7 @@ fn size_scaling(windows: Res<Windows>, mut q: Query<(&Size, &mut Sprite)>) {
 }
 
 // 位置を移動させる
-fn position_translation(windows: Res<Windows>, mut q: Query<(&Position, &mut Transform)>){
+fn position_translation(windows: Res<Windows>, mut q: Query<(&Position, &mut Transform)>) {
     // 原点位置を左下としているが、移動は中央から始まる
     fn convert(pos: f32, bound_window: f32, bound_game: f32) -> f32 {
         let tile_size = bound_window / bound_game;
@@ -191,11 +187,9 @@ fn position_translation(windows: Res<Windows>, mut q: Query<(&Position, &mut Tra
     }
 }
 
-fn snake_movement_input(
-    keyboard_input: Res<Input<KeyCode>>, mut heads: Query<&mut SnakeHead>)
-{
+fn snake_movement_input(keyboard_input: Res<Input<KeyCode>>, mut heads: Query<&mut SnakeHead>) {
     //
-    if let Some(mut head) = heads.iter_mut().next(){
+    if let Some(mut head) = heads.iter_mut().next() {
         let dir: Direction = if keyboard_input.pressed(KeyCode::Left) {
             Direction::Left
         } else if keyboard_input.pressed(KeyCode::Down) {
@@ -204,7 +198,7 @@ fn snake_movement_input(
             Direction::Up
         } else if keyboard_input.pressed(KeyCode::Right) {
             Direction::Right
-        }else{
+        } else {
             head.direction // 入力がなければそのまま
         };
         // 正反対方向の入力ではないことを確認
@@ -274,7 +268,7 @@ fn snake_movement(
             .zip(segments.0.iter().skip(1))
             // 各要素の positions の位置を更新する
             .for_each(|(pos, segment)| {
-               *positions.get_mut(*segment).unwrap() = *pos;
+                *positions.get_mut(*segment).unwrap() = *pos;
             });
         // 最後のsegmentの位置を割り当てる, segment_positions の更新の後で実行する
         last_tail_position.0 = Some(*segment_positions.last().unwrap());
@@ -287,9 +281,9 @@ fn snake_eating(
     mut growth_writer: EventWriter<GrowthEvent>,
     food_positions: Query<(Entity, &Position), With<Food>>,
     head_positions: Query<&Position, With<SnakeHead>>,
-){
-    for head_pos in head_positions.iter(){
-        for (ent, food_pos) in food_positions.iter(){
+) {
+    for head_pos in head_positions.iter() {
+        for (ent, food_pos) in food_positions.iter() {
             // 全ての食べ物の位置を探索して、頭の位置と一致するかを判定する
             if food_pos == head_pos {
                 // 食べ物を削除
@@ -306,8 +300,8 @@ fn snake_growth(
     last_tail_position: Res<LastTailPosition>,
     mut segments: ResMut<SnakeSegments>,
     mut growth_reader: EventReader<GrowthEvent>,
-    materials: Res<Materials>
-){
+    materials: Res<Materials>,
+) {
     if growth_reader.iter().next().is_some() {
         // 最後尾位置に segmentを追加
         segments.0.push(spawn_segment(
@@ -325,7 +319,7 @@ fn game_over(
     segments_res: ResMut<SnakeSegments>,
     food: Query<Entity, With<Food>>,
     segments: Query<Entity, With<SnakeSegment>>,
-){
+) {
     if reader.iter().next().is_some() {
         // 食べ物とsegmentを全部削除する
         for ent in food.iter().chain(segments.iter()) {
@@ -337,12 +331,9 @@ fn game_over(
 }
 
 // 食べ物を追加する
-fn food_spawner(
-    mut commands: Commands,
-    materials: Res<Materials>,
-){
+fn food_spawner(mut commands: Commands, materials: Res<Materials>) {
     commands
-        .spawn_bundle(SpriteBundle{
+        .spawn_bundle(SpriteBundle {
             material: materials.food_material.clone(),
             ..Default::default()
         })
@@ -363,7 +354,7 @@ fn main() {
         // 背景色を設定
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
         // windowサイズなどを設定する
-        .insert_resource(WindowDescriptor{
+        .insert_resource(WindowDescriptor {
             title: "Snake!".to_string(),
             width: 500.0,
             height: 500.0,
@@ -394,15 +385,17 @@ fn main() {
                     snake_eating
                         .system()
                         .label(SnakeMovement::Eating)
-                        .after(SnakeMovement::Movement))
+                        .after(SnakeMovement::Movement),
+                )
                 .with_system(
                     // 食事後に実行する
                     snake_growth
                         .system()
                         .label(SnakeMovement::Growth)
-                        .after(SnakeMovement::Eating))
+                        .after(SnakeMovement::Eating),
+                )
                 // 移動後にゲームオーバー判定をする
-                .with_system(game_over.system().after(SnakeMovement::Movement))
+                .with_system(game_over.system().after(SnakeMovement::Movement)),
         )
         .add_system_set(
             // 特定の時間(1秒間隔)で発生するためにFixedTimestepを使う
@@ -416,7 +409,7 @@ fn main() {
             CoreStage::PostUpdate,
             SystemSet::new()
                 .with_system(position_translation.system())
-                .with_system(size_scaling.system())
+                .with_system(size_scaling.system()),
         )
         .add_plugins(DefaultPlugins)
         .run();

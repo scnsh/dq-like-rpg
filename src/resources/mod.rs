@@ -1,9 +1,7 @@
-mod gameplay;
-mod map;
 mod battle;
 mod enemy;
+mod gameplay;
 mod item;
+mod map;
 
-pub use self::{
-    gameplay::*, map::*, battle::*, enemy::*, item::*,
-};
+pub use self::{battle::*, enemy::*, gameplay::*, item::*, map::*};

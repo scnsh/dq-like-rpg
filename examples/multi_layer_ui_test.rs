@@ -1,8 +1,8 @@
-use bevy::prelude::*;
-use bevy::render::RenderStage::Render;
-use bevy::render::camera::{RenderLayers, ActiveCameras, Camera};
 use bevy::core::FixedTimestep;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
+use bevy::prelude::*;
+use bevy::render::camera::{ActiveCameras, Camera, RenderLayers};
+use bevy::render::RenderStage::Render;
 
 /// An implementation of the classic game "Breakout"
 const TIME_STEP: f32 = 1.0 / 60.0;
@@ -18,17 +18,14 @@ fn main() {
         .run();
 }
 
-pub fn setup_cameras(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>
-)
-{
+pub fn setup_cameras(mut commands: Commands, asset_server: Res<AssetServer>) {
     // 2D用カメラを追加する
     let mut map_camera = OrthographicCameraBundle::new_2d();
     commands.spawn_bundle(map_camera);
 
     // UI用カメラを追加する
-    commands.spawn_bundle(UiCameraBundle::default())
+    commands
+        .spawn_bundle(UiCameraBundle::default())
         .insert(RenderLayers::layer(2))
         .insert(UICamera);
 
@@ -40,10 +37,7 @@ pub fn setup_cameras(
 struct UICamera;
 struct UIText;
 
-pub fn setup_ui_layer1(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>
-){
+pub fn setup_ui_layer1(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn_bundle(TextBundle {
             style: Style {
@@ -77,10 +71,7 @@ pub fn setup_ui_layer1(
         .insert(RenderLayers::layer(1));
 }
 
-pub fn setup_ui_layer2(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>
-){
+pub fn setup_ui_layer2(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn_bundle(TextBundle {
             style: Style {
@@ -134,10 +125,10 @@ fn keyboard_input_system(
     }
 }
 
-
-fn text_update_system(diagnostics: Res<Diagnostics>,
-                      mut query: Query<(&mut RenderLayers, &mut UIText)>)
-{
+fn text_update_system(
+    diagnostics: Res<Diagnostics>,
+    mut query: Query<(&mut RenderLayers, &mut UIText)>,
+) {
     for (mut render_layer, _text) in query.iter_mut() {
         if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
             if let Some(average) = fps.average() {

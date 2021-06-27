@@ -26,10 +26,7 @@ fn main() {
         .add_state(GameState::default())
         .add_plugins(DefaultPlugins)
         // this system will run once every update (it should match your screen's refresh rate)
-        .add_system_set(
-            SystemSet::on_update(GameState::Title)
-                .with_system(update.system())
-        )
+        .add_system_set(SystemSet::on_update(GameState::Title).with_system(update.system()))
         // .add_system(update.system())
         // add a new stage that runs every two seconds
         .add_stage_after(

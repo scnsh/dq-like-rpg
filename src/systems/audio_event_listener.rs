@@ -1,16 +1,11 @@
 use crate::components::*;
-use crate::resources::*;
 
 use bevy::prelude::*;
-use bevy_kira_audio::{Audio, AudioSource};
+use bevy_kira_audio::Audio;
 
 pub fn audio_event_listener(
     audio: Res<Audio>,
     mut audio_state: ResMut<AudioState>,
-    // mut interaction_query: Query<
-    //     (&Interaction, &Channel),
-    //     (Changed<Interaction>, With<PlayPauseButton>),
-    // >,
     mut events_reader: EventReader<AudioEvent>,
 ) {
     if !audio_state.audio_loaded {
@@ -36,22 +31,22 @@ pub fn audio_event_listener(
                         audio.play_looped_in_channel(audio_source, channel);
                     }
                 }
-            },
-            AudioEvent::Pause(kind) => {
-                let (channel, channel_audio_state) = audio_state.get_channel(kind).unwrap();
-                // 既に停止していればSkip
-                if channel_audio_state.stopped {
-                    continue;
-                }
-                if channel_audio_state.paused {
-                    // pauseしていればplay
-                    audio.resume_channel(channel);
-                }else{
-                    // playしていればpause
-                    audio.pause_channel(channel);
-                }
-                channel_audio_state.paused = !channel_audio_state.paused;
-            },
+            }
+            // AudioEvent::Pause(kind) => {
+            //     let (channel, channel_audio_state) = audio_state.get_channel(kind).unwrap();
+            //     // 既に停止していればSkip
+            //     if channel_audio_state.stopped {
+            //         continue;
+            //     }
+            //     if channel_audio_state.paused {
+            //         // pauseしていればplay
+            //         audio.resume_channel(channel);
+            //     } else {
+            //         // playしていればpause
+            //         audio.pause_channel(channel);
+            //     }
+            //     channel_audio_state.paused = !channel_audio_state.paused;
+            // }
             AudioEvent::Stop(kind) => {
                 let (channel, channel_audio_state) = audio_state.get_channel(kind).unwrap();
                 // 既に停止していればSkip
@@ -60,7 +55,7 @@ pub fn audio_event_listener(
                 }
                 audio.stop_channel(channel);
                 *channel_audio_state = ChannelAudioState::default();
-            },
+            }
         }
     }
 }

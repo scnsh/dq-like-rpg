@@ -8,8 +8,8 @@ pub enum GameEvent {
     // 街に到着
     TownArrived(Item, bool),
 
-    // プレイヤーが移動
-    PlayerMoved,
+    // // プレイヤーが移動
+    // PlayerMoved,
 
     // 勝利
     Win(bool),
@@ -19,9 +19,8 @@ pub enum GameEvent {
 
     // 最終戦勝利
     WinLast,
-
-    // 攻撃
-    PlayerAttack,
+    // // 攻撃
+    // PlayerAttack,
 
     // エンティティが動いた時に実行される
     // EntityMoved(EntityId),

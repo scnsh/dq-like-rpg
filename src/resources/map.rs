@@ -1,11 +1,9 @@
-use std::collections::{HashSet, HashMap};
-use bevy_tilemap::Tilemap;
-use crate::components::{MapField, Position};
-use bevy::sprite::collide_aabb::collide;
+use crate::components::MapField;
+use std::collections::{HashMap, HashSet};
 
 pub const MAP_SIZE: [u32; 2] = [64, 48];
-pub const MAP_TEXTURE_SIZE: [u32; 2]  = [16, 16];
-pub const CHUNK_SIZE: [u32; 2]  = [3, 3];
+pub const MAP_TEXTURE_SIZE: [u32; 2] = [16, 16];
+pub const CHUNK_SIZE: [u32; 2] = [3, 3];
 
 #[derive(Default)]
 pub struct Map {
@@ -19,13 +17,18 @@ pub struct Map {
 
 impl Map {
     pub fn got_item(&mut self, pos: (i32, i32)) {
-        let mut town = self.fields.get(&pos).unwrap();
-        match town{
-            MapField::Town{item, visited} =>{
-                self.fields.insert(pos, MapField::Town{item:*item, visited: true});
+        let town = self.fields.get(&pos).unwrap().clone();
+        match town {
+            MapField::Town { item, visited: _ } => {
+                self.fields.insert(
+                    pos,
+                    MapField::Town {
+                        item,
+                        visited: true,
+                    },
+                );
             }
-            _ => panic!("got item should be called on 'Town' MapField")
+            _ => panic!("got item should be called on 'Town' MapField"),
         }
     }
 }
-

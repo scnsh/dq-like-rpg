@@ -1,13 +1,14 @@
 #![allow(clippy::all)]
 
 mod components;
+mod events;
 mod resources;
 mod systems;
-mod events;
 
 use crate::components::*;
 use crate::resources::*;
 // use crate::systems::*;
+use crate::events::GameEvent;
 use bevy::{
     // asset::LoadState,
     prelude::*,
@@ -15,9 +16,8 @@ use bevy::{
     // utils::HashSet,
     window::WindowMode,
 };
-use bevy_tilemap::prelude::*;
-use crate::events::GameEvent;
 use bevy_kira_audio::AudioPlugin;
+use bevy_tilemap::prelude::*;
 
 fn main() {
     App::build()
@@ -48,9 +48,11 @@ fn main() {
         .add_startup_system(systems::setup_cameras.system())
         .add_system(systems::print_keyboard_event.system())
         .add_system(systems::audio_event_listener.system())
-        .add_system(systems::input.system()
-            .label(PlayerMovement::Input)
-            .before(PlayerMovement::Movement)
+        .add_system(
+            systems::input
+                .system()
+                .label(PlayerMovement::Input)
+                .before(PlayerMovement::Movement),
         )
         .add_system_set(
             SystemSet::on_enter(GameState::Title)
@@ -59,31 +61,29 @@ fn main() {
         )
         .add_system_set(
             SystemSet::on_update(GameState::Title)
-                .with_system(systems::gamestart_keyboard.system())
+                .with_system(systems::gamestart_keyboard.system()),
         )
         .add_system_set(
-            SystemSet::on_enter(GameState::Loading)
-                .with_system(systems::setup.system())
+            SystemSet::on_enter(GameState::Loading).with_system(systems::setup.system()),
         )
         .add_system_set(
-            SystemSet::on_update(GameState::Loading)
-                .with_system(systems::loading.system())
+            SystemSet::on_update(GameState::Loading).with_system(systems::loading.system()),
         )
         .add_system_set(
             SystemSet::on_enter(GameState::Generating)
                 .with_system(systems::spawn_map_entity.system())
-                .label("spawn_map")
+                .label("spawn_map"),
         )
         .add_system_set(
             SystemSet::on_update(GameState::Generating)
                 .with_system(systems::generate_map.system())
                 .label("generate_map")
-                .after("spawn_map")
+                .after("spawn_map"),
         )
         .add_system_set(
             SystemSet::on_update(GameState::Generating)
                 .with_system(systems::spawn_player.system())
-                .after("generate_map")
+                .after("generate_map"),
         )
         .add_system_set(
             SystemSet::on_enter(GameState::Map)
@@ -94,15 +94,17 @@ fn main() {
         .add_system_set(
             SystemSet::on_update(GameState::Map)
                 .with_system(systems::animate_sprite_system.system())
-                .with_system(systems::translation_animation.system()
-                    .label(PlayerMovement::Movement))
+                .with_system(
+                    systems::translation_animation
+                        .system()
+                        .label(PlayerMovement::Movement),
+                )
                 .with_system(systems::update_status_ui.system())
                 .with_system(systems::update_inventory_ui.system())
-                .with_system(systems::map_event_listener.system())
+                .with_system(systems::map_event_listener.system()),
         )
         .add_system_set(
-            SystemSet::on_exit(GameState::Map)
-                .with_system(systems::clean_up_map.system())
+            SystemSet::on_exit(GameState::Map).with_system(systems::clean_up_map.system()),
         )
         .add_system_set(
             SystemSet::on_enter(GameState::Battle)
@@ -117,11 +119,10 @@ fn main() {
                 .with_system(systems::update_status_ui.system())
                 .with_system(systems::battle_system.system())
                 .with_system(systems::spawn_effect_event.system())
-                .with_system(systems::handle_effect.system())
+                .with_system(systems::handle_effect.system()),
         )
         .add_system_set(
-            SystemSet::on_exit(GameState::Battle)
-                .with_system(systems::clean_up_battle.system())
+            SystemSet::on_exit(GameState::Battle).with_system(systems::clean_up_battle.system()),
         )
         .add_system_set(
             SystemSet::on_enter(GameState::Event)
@@ -129,8 +130,7 @@ fn main() {
                 .with_system(systems::state_enter_despawn.system()),
         )
         .add_system_set(
-            SystemSet::on_exit(GameState::Event)
-                .with_system(systems::clean_up_event.system())
+            SystemSet::on_exit(GameState::Event).with_system(systems::clean_up_event.system()),
         )
         .run();
 }

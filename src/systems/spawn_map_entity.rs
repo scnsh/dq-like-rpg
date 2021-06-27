@@ -3,14 +3,13 @@ use crate::resources::*;
 
 use bevy::prelude::*;
 use bevy_tilemap::prelude::*;
-use bevy::asset::HandleId;
 
 pub fn spawn_map_entity(
     mut commands: Commands,
     asset_handles: Res<AssetHandles>, // スプライト全体のハンドルとロード状態を管理
     mut texture_atlases: ResMut<Assets<TextureAtlas>>, // テクスチャアトラス
     camera_query: Query<(Entity, &Transform, &MapCamera)>,
-){
+) {
     // テクスチャは1つと仮定
     let sprite_handle = asset_handles.tilemap.clone();
 
@@ -53,10 +52,7 @@ pub fn spawn_map_entity(
         global_transform: Default::default(),
     };
 
-    commands
-        .spawn_bundle(tilemap_components)
-        .insert(TileMap);
-
+    commands.spawn_bundle(tilemap_components).insert(TileMap);
 
     // minimapをワールドに追加
     let sprite_handle = asset_handles.mini_tilemap.clone();
@@ -74,7 +70,7 @@ pub fn spawn_map_entity(
                 kind: LayerKind::Dense,
                 ..Default::default()
             },
-            render_layer(RenderLayer::Player)
+            render_layer(RenderLayer::Player),
         )
         .texture_atlas(atlas_handle)
         .finish()
@@ -88,7 +84,11 @@ pub fn spawn_map_entity(
             is_visible: true,
             is_transparent: true,
         },
-        transform: Transform::from_xyz(MAP_SIZE[0] as f32 *1.5, MAP_SIZE[1] as f32 *1.5, -transform.translation.z + render_layer(RenderLayer::Player) as f32),
+        transform: Transform::from_xyz(
+            MAP_SIZE[0] as f32 * 1.5,
+            MAP_SIZE[1] as f32 * 1.5,
+            -transform.translation.z + render_layer(RenderLayer::Player) as f32,
+        ),
         global_transform: Default::default(),
     };
 

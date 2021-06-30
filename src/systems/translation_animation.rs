@@ -32,15 +32,15 @@ pub fn translation_animation(
                         let enemy = enemy_data.field_to_enemy(&position_to_field(&map, &position));
                         events_writer.send(GameEvent::EnemyEncountered(enemy))
                     }
-                    // MapField::Grass | MapField::Forest | MapField::Mountain => {
-                    //     // ランダム戦闘
-                    //     let field = &position_to_field(&map, &position);
-                    //     let mut rng = rand::thread_rng();
-                    //     if rng.gen_bool((1. / enemy_data.field_to_rate(field) as f32) as f64) {
-                    //         let enemy = enemy_data.field_to_enemy(field);
-                    //         events_writer.send(GameEvent::EnemyEncountered(enemy));
-                    //     }
-                    // }
+                    MapField::Grass | MapField::Forest | MapField::Mountain => {
+                        // ランダム戦闘
+                        let field = &position_to_field(&map, &position);
+                        let mut rng = rand::thread_rng();
+                        if rng.gen_bool((1. / enemy_data.field_to_rate(field) as f32) as f64) {
+                            let enemy = enemy_data.field_to_enemy(field);
+                            events_writer.send(GameEvent::EnemyEncountered(enemy));
+                        }
+                    }
                     _ => {}
                 }
             }

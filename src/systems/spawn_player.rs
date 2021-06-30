@@ -18,9 +18,9 @@ pub fn spawn_player(
         *map_camera = MapCamera::default();
 
         // 主人公を追加する
-        // let you_sprite = asset_server.load("images/player/you.png");
+        // let you_sprite = asset_server.load("images/player/player.png");
         let you_sprite = asset_handles.player.clone();
-        let texture_atlas = TextureAtlas::from_grid(you_sprite, Vec2::new(16., 16.), 2, 1);
+        let texture_atlas = TextureAtlas::from_grid(you_sprite, Vec2::new(14., 20.), 2, 1);
         let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
         // let position = Position { x: 0, y: 0 };

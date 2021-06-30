@@ -15,7 +15,7 @@ pub fn setup(
     asset_handles.mini_tilemap = asset_server.load("images/tiles/miniland.png").clone();
 
     // プレイヤー用の texture を読み込む
-    asset_handles.player = asset_server.load("images/player/you.png").clone();
+    asset_handles.player = asset_server.load("images/player/player.png").clone();
 
     // バトル用の texture を読み込む
     asset_handles.battle_background = asset_server.load("images/battle/background.png").clone();
@@ -52,18 +52,20 @@ pub fn setup(
 
     // 敵のtextureを読み込む
     asset_handles.enemies = Vec::new();
+    asset_handles.enemies.push(
+        asset_server
+            .load("images/enemies/GD_Goblin(Green).png")
+            .clone(),
+    );
     asset_handles
         .enemies
-        .push(asset_server.load("images/enemies/goblin.png").clone());
+        .push(asset_server.load("images/enemies/GD_Skeleton.png").clone());
     asset_handles
         .enemies
-        .push(asset_server.load("images/enemies/elf.png").clone());
+        .push(asset_server.load("images/enemies/GD_Griffin.png").clone());
     asset_handles
         .enemies
-        .push(asset_server.load("images/enemies/bird.png").clone());
-    asset_handles
-        .enemies
-        .push(asset_server.load("images/enemies/boss.png").clone());
+        .push(asset_server.load("images/enemies/GD_Lich.png").clone());
 
     // assets/sounds 以下の各ファイルを読み込む
     audio_state.channels.insert(

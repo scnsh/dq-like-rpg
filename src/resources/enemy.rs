@@ -9,8 +9,8 @@ use std::iter::FromIterator;
 #[derive(Clone, Copy, Debug)]
 pub enum Enemy {
     Goblin,
-    Elf,
-    Bird,
+    Skeleton,
+    Griffin,
     Boss,
 }
 impl Default for Enemy {
@@ -57,19 +57,19 @@ impl Default for EnemyData {
                 (
                     MapField::Forest,
                     EnemyStatus {
-                        name: Enemy::Elf,
+                        name: Enemy::Skeleton,
                         rate: 10,
                         img: 1,
                         hp: 100,
                         at: 20,
                         df: 10,
-                        skl: Skill::Arrow,
+                        skl: Skill::Sword,
                     },
                 ),
                 (
                     MapField::Mountain,
                     EnemyStatus {
-                        name: Enemy::Bird,
+                        name: Enemy::Griffin,
                         rate: 5,
                         img: 2,
                         hp: 200,

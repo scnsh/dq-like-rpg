@@ -45,8 +45,9 @@ pub fn setup_battle(
     );
     let enemy_root_offset = Vec2::new(enemy_window_size.x - window.width() as f32 / (2. * 3.), 0.);
     //TODO: 16 をテクスチャから読み込む用に
-    let enemy_scale =
-        cmp::min(enemy_window_size.x as i32, enemy_window_size.y as i32) as f32 / 16. * 0.5;
+    let enemy_scale = 1.;
+    // let enemy_scale =
+    //     cmp::min(enemy_window_size.x as i32, enemy_window_size.y as i32) as f32 / 16. * 0.5;
 
     // 背景と敵を追加
     let battle_entity = commands

@@ -99,6 +99,8 @@ pub struct UiStatusEnemyText;
 pub struct UiStatusInventoryText;
 // イベント画面のテキスト
 pub struct UiEventText;
+// タイトル画面のテキスト
+pub struct UiTitleText;
 
 // キャラクターのステータス
 #[derive(Clone)]

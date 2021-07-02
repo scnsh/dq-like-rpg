@@ -1,7 +1,6 @@
 use crate::components::*;
 use crate::resources::*;
 use bevy::prelude::*;
-use core::cmp;
 use rand::Rng;
 
 pub fn setup_battle(

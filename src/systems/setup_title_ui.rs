@@ -1,3 +1,4 @@
+use crate::components::UiTitleText;
 use crate::resources::{ForState, GameState};
 use bevy::prelude::*;
 
@@ -109,7 +110,25 @@ pub fn setup_title_ui(
                         })
                         .insert(ForState {
                             states: vec![GameState::Title],
-                        });
+                        })
+                        .insert(Timer::from_seconds(1., true))
+                        .insert(UiTitleText);
                 });
         });
+}
+
+pub fn update_title_ui(
+    time: Res<Time>,
+    mut query: Query<(&mut Timer, &mut Text), With<UiTitleText>>,
+) {
+    for (mut timer, mut text) in query.iter_mut() {
+        timer.tick(time.delta());
+        if timer.finished() {
+            if text.sections[0].value == "" {
+                text.sections[0].value = format!("Press 'Space' to start");
+            } else {
+                text.sections[0].value = format!("");
+            }
+        }
+    }
 }

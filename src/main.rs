@@ -25,11 +25,11 @@ fn main() {
         .add_event::<EffectSpawnEvent>()
         .add_event::<AudioEvent>()
         .insert_resource(WindowDescriptor {
-            title: "RPG".to_string(),
+            title: "dq-like-rpg".to_string(),
             width: 1024.,
             height: 768.,
             vsync: false,
-            resizable: true,
+            resizable: false,
             mode: WindowMode::Windowed,
             ..Default::default()
         })
@@ -61,7 +61,8 @@ fn main() {
         )
         .add_system_set(
             SystemSet::on_update(GameState::Title)
-                .with_system(systems::gamestart_keyboard.system()),
+                .with_system(systems::gamestart_keyboard.system())
+                .with_system(systems::update_title_ui.system()),
         )
         .add_system_set(
             SystemSet::on_enter(GameState::Loading).with_system(systems::setup.system()),

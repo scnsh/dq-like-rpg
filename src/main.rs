@@ -58,10 +58,15 @@ fn main() {
                 .with_system(systems::update_title_ui.system()),
         )
         .add_system_set(
-            SystemSet::on_enter(GameState::Loading).with_system(systems::setup.system()),
+            SystemSet::on_enter(GameState::Loading)
+                .with_system(systems::setup.system())
+                .with_system(systems::setup_loading_ui.system())
+                .with_system(systems::state_enter_despawn.system()),
         )
         .add_system_set(
-            SystemSet::on_update(GameState::Loading).with_system(systems::loading.system()),
+            SystemSet::on_update(GameState::Loading)
+                .with_system(systems::loading.system())
+                .with_system(systems::update_loading_ui.system()),
         )
         .add_system_set(
             SystemSet::on_enter(GameState::Generating)

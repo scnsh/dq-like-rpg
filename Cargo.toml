@@ -9,7 +9,6 @@ edition = "2018"
 [dependencies]
 bevy = "0.5"
 bevy_tilemap = "0.4"
-bevy_egui = "0.5"
 rand = "0.7.3"
 bevy_kira_audio = { version = "0.5.1", features=["mp3"]}
 

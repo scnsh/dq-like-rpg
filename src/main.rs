@@ -6,16 +6,9 @@ mod resources;
 mod systems;
 
 use crate::components::*;
-use crate::resources::*;
-// use crate::systems::*;
 use crate::events::GameEvent;
-use bevy::{
-    // asset::LoadState,
-    prelude::*,
-    // sprite::TextureAtlasBuilder,
-    // utils::HashSet,
-    window::WindowMode,
-};
+use crate::resources::*;
+use bevy::{prelude::*, window::WindowMode};
 use bevy_kira_audio::AudioPlugin;
 use bevy_tilemap::prelude::*;
 

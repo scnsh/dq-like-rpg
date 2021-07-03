@@ -1,5 +1,5 @@
 [package]
-name = "rpg"
+name = "dq-like-rpg"
 version = "0.1.0"
 authors = ["Naoki Numaguchi <naoki.numaguchi@groove-x.com>"]
 edition = "2018"
@@ -13,4 +13,5 @@ rand = "0.7.3"
 bevy_kira_audio = { version = "0.5.1", features=["mp3"]}
 
 [patch.crates-io]
+# avoid bug: https://github.com/joshuajbouw/bevy_tilemap/issues/152
 bevy_tilemap = { git = 'https://github.com/scnsh/bevy_tilemap', branch = 'patched' }

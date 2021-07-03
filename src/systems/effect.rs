@@ -46,7 +46,7 @@ pub fn spawn_effect_event(
                     states: vec![GameState::Battle],
                 })
                 .with_children(|child_builder| {
-                    // 敵の攻撃の場合はダメージ表示用のテクスチャを表示する
+                    // 敵の攻撃の場合はダメージ表示用のテクスチャを表示する(背景を赤くする)
                     if !&event.is_player_attack {
                         child_builder
                             .spawn_bundle(SpriteBundle {
@@ -64,7 +64,6 @@ pub fn spawn_effect_event(
                     }
                 })
                 .id();
-            // commands.entity(battle.entity.unwrap()).push_children(&[effect]);
 
             commands
                 .spawn_bundle(NodeBundle {
@@ -111,13 +110,10 @@ pub fn spawn_effect_event(
                                 horizontal: HorizontalAlign::Center,
                             },
                         ),
-                        // visible: Visible {
-                        //     is_visible: false,
-                        //     is_transparent: false,
-                        // },
                         ..Default::default()
                     });
                 });
+            // Player攻撃時のみサウンドを再生、攻撃と回復で音の種類も分ける
             if matches!(&event.is_player_attack, true) {
                 if matches!(&event.kind, EffectKind::Heal) {
                     audio_event_writer.send(AudioEvent::Play(AudioKind::SEHeal));
@@ -181,6 +177,7 @@ pub fn handle_effect(
                 } else {
                 }
             }
+            // 文字の表示はエフェクトとともに削除
             for (entity, mut effect, _string) in query.q1_mut().iter_mut() {
                 effect.finish_timer.tick(elapsed);
                 if effect.finish_timer.finished() {
@@ -191,7 +188,7 @@ pub fn handle_effect(
     }
 }
 
-// Effectが残った状態で次の場面に切り替わらないように削除する
+// シーンが遷移する前にEffectの表示を削除する
 pub fn clean_up_battle(
     mut commands: Commands,
     mut query: QuerySet<(

@@ -86,35 +86,35 @@ pub fn setup(
     // bgm(ループ再生)
     audio_state.sound_handles.insert(
         AudioKind::BGMMap,
-        asset_server.load("sounds/bgm/bgm_maoudamashii_8bit01.mp3"),
+        asset_server.load("sounds/bgm/bgm_maoudamashii_8bit01.ogg"),
     );
     audio_state.sound_handles.insert(
         AudioKind::BGMBattle,
-        asset_server.load("sounds/bgm/bgm_maoudamashii_8bit18.mp3"),
+        asset_server.load("sounds/bgm/bgm_maoudamashii_8bit18.ogg"),
     );
     audio_state.sound_handles.insert(
         AudioKind::BGMLose,
-        asset_server.load("sounds/bgm/bgm_maoudamashii_8bit20.mp3"),
+        asset_server.load("sounds/bgm/bgm_maoudamashii_8bit20.ogg"),
     );
     audio_state.sound_handles.insert(
         AudioKind::BGMWin,
-        asset_server.load("sounds/bgm/bgm_maoudamashii_8bit24.mp3"),
+        asset_server.load("sounds/bgm/bgm_maoudamashii_8bit24.ogg"),
     );
     audio_state.sound_handles.insert(
         AudioKind::BGMBattleLast,
-        asset_server.load("sounds/bgm/bgm_maoudamashii_8bit25.mp3"),
+        asset_server.load("sounds/bgm/bgm_maoudamashii_8bit25.ogg"),
     );
     // se(one-shot)
     audio_state.sound_handles.insert(
         AudioKind::SEAttack,
-        asset_server.load("sounds/se/se_maoudamashii_retro03.mp3"),
+        asset_server.load("sounds/se/se_maoudamashii_retro03.ogg"),
     );
     audio_state.sound_handles.insert(
         AudioKind::SEHeal,
-        asset_server.load("sounds/se/se_maoudamashii_retro08.mp3"),
+        asset_server.load("sounds/se/se_maoudamashii_retro08.ogg"),
     );
     audio_state.sound_handles.insert(
         AudioKind::SETown,
-        asset_server.load("sounds/se/se_maoudamashii_retro22.mp3"),
+        asset_server.load("sounds/se/se_maoudamashii_retro22.ogg"),
     );
 }

@@ -13,19 +13,24 @@ use bevy_kira_audio::AudioPlugin;
 use bevy_tilemap::prelude::*;
 
 fn main() {
-    App::build()
-        .add_event::<GameEvent>()
+    let mut app = App::build();
+    app.insert_resource(WindowDescriptor {
+        title: "dq-like-rpg".to_string(),
+        width: 1024.,
+        height: 768.,
+        vsync: false,
+        resizable: false,
+        mode: WindowMode::Windowed,
+        ..Default::default()
+    })
+    .add_plugins(DefaultPlugins);
+
+    #[cfg(target_arch = "wasm32")]
+    app.add_plugin(bevy_webgl2::WebGL2Plugin);
+
+    app.add_event::<GameEvent>()
         .add_event::<EffectSpawnEvent>()
         .add_event::<AudioEvent>()
-        .insert_resource(WindowDescriptor {
-            title: "dq-like-rpg".to_string(),
-            width: 1024.,
-            height: 768.,
-            vsync: false,
-            resizable: false,
-            mode: WindowMode::Windowed,
-            ..Default::default()
-        })
         .init_resource::<AssetHandles>()
         .init_resource::<GameState>()
         .init_resource::<EnemyData>()
@@ -34,7 +39,6 @@ fn main() {
         .init_resource::<Battle>()
         .init_resource::<RunState>()
         .init_resource::<AudioState>()
-        .add_plugins(DefaultPlugins)
         .add_plugins(TilemapDefaultPlugins) // TileMap用のデフォルトプラグイン
         .add_plugin(AudioPlugin)
         .add_state(GameState::default())

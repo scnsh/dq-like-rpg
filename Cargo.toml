@@ -6,12 +6,36 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = [
+    "bevy/bevy_gltf",
+    "bevy/bevy_winit",
+    "bevy/render",
+    "bevy/png",
+    "bevy_kira_audio/ogg"
+]
+
+native = [
+    "bevy/bevy_wgpu",
+]
+
+web = [
+    "bevy_webgl2",
+]
+
 [dependencies]
-bevy = "0.5"
+bevy = {version="0.5.0", default-features=false}
+bevy_webgl2 = {version="0.5.2", optional=true}
 bevy_tilemap = "0.4"
-rand = "0.7.3"
-bevy_kira_audio = { version = "0.5.1", features=["mp3"]}
+bevy_kira_audio = "0.5.1"
+
+winit = {version="0.24.0"}
+rand = "0.7"
+getrandom = {version="0.1", features=["wasm-bindgen"]}
 
 [patch.crates-io]
 # avoid bug: https://github.com/joshuajbouw/bevy_tilemap/issues/152
 bevy_tilemap = { git = 'https://github.com/scnsh/bevy_tilemap', branch = 'patched' }
+
+[profile.dev]
+opt-level = 1

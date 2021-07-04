@@ -10,6 +10,27 @@ Game likes dragon quest (traditional JPRG) by bevyengine.
 
 https://user-images.githubusercontent.com/8430795/124334813-42c94080-dbd3-11eb-9bb9-278cc1990217.mp4
 
+# How to Build
+
+## Prerequisites
+
+```
+cargo install cargo-make
+```
+
+## Build and serve WASM version
+```
+cargo make serve
+```
+then point your browser to http://127.0.0.1:4000/
+
+
+## Build and run native version
+```
+cargo make run
+```
+This project have multi-target(WASM/Native) and use [template](https://github.com/mrk-its/bevy_webgl2_app_template)
+
 # How to Play
 
 - Map is auto generated.

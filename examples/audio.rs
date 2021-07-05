@@ -340,8 +340,8 @@ fn prepare_audio_and_ui(
         ChannelAudioState::default(),
     );
 
-    let loop_handle = asset_server.load("sounds/bgm/bgm_maoudamashii_8bit01.ogg");
-    let sound_handle = asset_server.load("sounds/se/se_maoudamashii_retro03.ogg");
+    let loop_handle = asset_server.load("audio/bgm/bgm_maoudamashii_8bit01.ogg");
+    let sound_handle = asset_server.load("audio/se/se_maoudamashii_retro03.ogg");
     let audio_state = AudioState {
         channels,
         audio_loaded: false,

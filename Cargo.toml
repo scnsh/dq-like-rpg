@@ -1,10 +1,9 @@
 [package]
 name = "dq-like-rpg"
+description = "A traditoanl role playing game likes Dragon quest"
 version = "0.1.0"
 authors = ["Naoki Numaguchi <redheru+dev@gmail.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
 default = [
@@ -12,30 +11,36 @@ default = [
     "bevy/bevy_winit",
     "bevy/render",
     "bevy/png",
-    "bevy_kira_audio/ogg"
+    "game_plugin/default"
 ]
 
 native = [
     "bevy/bevy_wgpu",
+    "game_plugin/native"
 ]
 
 web = [
     "bevy_webgl2",
 ]
 
+dev = [
+    "bevy/dinamic",
+    "native"
+]
+
 [dependencies]
 bevy = {version="0.5.0", default-features=false}
-bevy_webgl2 = {version="0.5.2", optional=true}
-bevy_tilemap = "0.4"
-bevy_kira_audio = "0.5.1"
-
+game_plugin = {path = "game_plugin"}
 winit = {version="0.24.0"}
-rand = "0.7"
-getrandom = {version="0.1", features=["wasm-bindgen"]}
 
-[patch.crates-io]
-# avoid bug: https://github.com/joshuajbouw/bevy_tilemap/issues/152
-bevy_tilemap = { git = 'https://github.com/scnsh/bevy_tilemap', branch = 'patched' }
+bevy_webgl2 = {version="0.5.2", optional=true}
 
-[profile.dev]
-opt-level = 1
+[build-dependencies]
+embed-resource = "1.4"
+
+#[package.metadata.bundle]
+#name = "DQ-like-RPG"
+#identifier = "dev.scnsh.dq-like-rpg"
+#icon = ["build/*.png"]
+#resouraces = ["assets"]
+#short_description = "A traditoanl role playing game likes Dragon quest"

@@ -1,5 +1,12 @@
-use crate::generate::Map;
+use crate::audio::{AudioEvent, AudioKind};
+use crate::character_status::CharacterStatus;
+use crate::enemies::EnemyData;
+use crate::events::GameEvent;
+use crate::inventory::Inventory;
 use crate::loading::FontAssets;
+use crate::map::{Map, Position};
+use crate::player::Player;
+use crate::setup::MapCamera;
 use crate::AppState;
 use bevy::prelude::*;
 
@@ -8,12 +15,12 @@ pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system_set(
-            SystemSet::on_enter(AppState::InGameMap)
+            SystemSet::on_enter(AppState::InGameExplore)
                 .with_system(setup_status_ui.system())
                 .with_system(setup_map_ui.system()),
         )
         .add_system_set(
-            SystemSet::on_update(AppState::InGameMap).with_system(update_status_ui.system()),
+            SystemSet::on_update(AppState::InGameExplore).with_system(update_status_ui.system()),
         )
         .add_system_set(
             SystemSet::on_enter(AppState::InGameBattle)
@@ -151,7 +158,7 @@ fn setup_status_ui(
 }
 
 // ステータス画面(プレイヤー)を更新する
-pub fn update_status_ui(
+fn update_status_ui(
     query: Query<&CharacterStatus, (With<Player>, Changed<CharacterStatus>)>,
     mut status_query: Query<&mut Text, With<UiStatusPlayerText>>,
 ) {
@@ -162,7 +169,7 @@ pub fn update_status_ui(
     }
 }
 
-pub fn setup_battle_inventory_ui(
+fn setup_battle_inventory_ui(
     mut commands: Commands,
     font_assets: Res<FontAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -265,7 +272,7 @@ pub fn setup_battle_inventory_ui(
         });
 }
 
-pub fn setup_enemy_status_ui(
+fn setup_enemy_status_ui(
     mut commands: Commands,
     font_assets: Res<FontAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -355,7 +362,7 @@ pub fn setup_enemy_status_ui(
 }
 
 // ステータス画面(エネミー)を更新する
-pub fn update_enemy_status_ui(
+fn update_enemy_status_ui(
     query: Query<&CharacterStatus, (Without<Player>, Changed<CharacterStatus>)>,
     mut status_query: Query<&mut Text, With<UiStatusEnemyText>>,
 ) {
@@ -367,7 +374,7 @@ pub fn update_enemy_status_ui(
 }
 
 // ステータス画面(バトルインベントリ)を更新する
-pub fn update_battle_inventory_ui(
+fn update_battle_inventory_ui(
     query: Query<&Inventory, (With<Player>, Changed<Inventory>)>,
     mut queries: Query<&mut Text, With<UiStatusInventoryText>>,
 ) {
@@ -377,3 +384,136 @@ pub fn update_battle_inventory_ui(
         }
     }
 }
+
+fn event_text(state: &RunState) -> String {
+    match &state.event {
+        None => panic!("can't convert text from None."),
+        Some(event) => match event {
+            GameEvent::EnemyEncountered(enemy) => {
+                format!("Battle!!!\n{0:?} appeared.\n", enemy)
+            }
+            GameEvent::TownArrived(item, visited) => {
+                if *visited {
+                    format!("Town\nGet healed up your HP!\n")
+                } else {
+                    format!("Town\nGet healed up your HP!\nGet a {:?}!", item)
+                }
+            }
+            GameEvent::Win(levelup) => {
+                if *levelup {
+                    return format!("You Win!\nLevel Up!\n");
+                }
+                return format!("You Win!\n");
+            }
+            GameEvent::Lose => {
+                format!("You Lose!\n")
+            }
+            GameEvent::WinLast => {
+                format!("You won the last battle!\nYou saved the kingdom!")
+            }
+        },
+    }
+}
+
+fn setup_event_ui(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    runstate: Res<RunState>,
+    mut audio_event_writer: EventWriter<AudioEvent>,
+) {
+    commands
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                size: Size::new(Val::Percent(100.), Val::Percent(90.)),
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    left: Val::Percent(0.),
+                    top: Val::Percent(5.),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            material: materials.add(Color::rgb(0.95, 0.95, 0.95).into()),
+            // visible: Visible {
+            //     is_visible: false,
+            //     is_transparent: false,
+            // },
+            ..Default::default()
+        })
+        .insert(ForState {
+            states: vec![GameState::Event],
+        })
+        .with_children(|parent| {
+            // ステータスウインドウ(中身)
+            parent
+                .spawn_bundle(NodeBundle {
+                    style: Style {
+                        size: Size::new(Val::Percent(100.), Val::Percent(100.)),
+                        padding: Rect::all(Val::Px(10.)),
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        ..Default::default()
+                    },
+                    material: materials.add(Color::BLACK.into()),
+                    // visible: Visible {
+                    //     is_visible: false,
+                    //     is_transparent: false,
+                    // },
+                    ..Default::default()
+                })
+                .insert(ForState {
+                    states: vec![GameState::Event],
+                })
+                .with_children(|parent| {
+                    // テキスト
+                    parent
+                        .spawn_bundle(TextBundle {
+                            style: Style {
+                                margin: Rect::all(Val::Px(5.)),
+                                ..Default::default()
+                            },
+                            text: Text::with_section(
+                                runstate.event_text(),
+                                TextStyle {
+                                    font: asset_server.load("fonts/PixelMplus12-Regular.ttf"),
+                                    font_size: 90.0,
+                                    color: Color::WHITE,
+                                },
+                                TextAlignment {
+                                    vertical: VerticalAlign::Center,
+                                    horizontal: HorizontalAlign::Center,
+                                },
+                            ),
+                            // visible: Visible {
+                            //     is_visible: false,
+                            //     is_transparent: false,
+                            // },
+                            ..Default::default()
+                        })
+                        .insert(ForState {
+                            states: vec![GameState::Event],
+                        })
+                        .insert(UiEventText);
+                });
+        })
+        .id();
+
+    match runstate.event.as_ref().unwrap() {
+        GameEvent::TownArrived(_, _) => {
+            audio_event_writer.send(AudioEvent::Play(AudioKind::SETown));
+        }
+        GameEvent::Win(_) | GameEvent::WinLast => {
+            audio_event_writer.send(AudioEvent::Play(AudioKind::BGMWin));
+        }
+        GameEvent::Lose => {
+            audio_event_writer.send(AudioEvent::Play(AudioKind::BGMLose));
+        }
+        _ => {}
+    }
+}
+
+// pub fn clean_up_event(mut audio_event_writer: EventWriter<AudioEvent>) {
+//     audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMWin));
+//     audio_event_writer.send(AudioEvent::Stop(AudioKind::SETown));
+// }

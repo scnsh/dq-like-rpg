@@ -1,29 +1,38 @@
 use crate::loading::TileMapAtlas;
 use crate::AppState;
 use bevy::prelude::*;
-use bevy_tilemap::prelude::{GridTopology, LayerKind, TilemapBundle};
+use bevy_tilemap::prelude::{GridTopology, LayerKind, TilemapBundle, TilemapDefaultPlugins};
 use bevy_tilemap::{Tile, Tilemap, TilemapLayer};
 use rand::Rng;
 use std::collections::{HashMap, HashSet};
+use crate::setup::{RenderLayer, render_layer};
 
-pub struct GeneratePlugin;
+pub struct MapPlugin;
 
-impl Plugin for GeneratePlugin {
+impl Plugin for MapPlugin {
     fn build(&self, app: &mut AppBuilder) {
         let map = Map::generate_map();
         app.insert_resource(map)
+            .add_plugins(TilemapDefaultPlugins)
             .add_system_set(
-                SystemSet::on_enter(AppState::InGameGenerate)
+                SystemSet::on_enter(AppState::InGameMap)
                     .with_system(spawn_map.system())
                     .label("generate")
                     .with_system(spawn_mini_map.system())
                     .label("generate"),
             )
             .add_system_set(
-                SystemSet::on_update(AppState::InGameMap).with_system(update_mini_map.system()),
+                SystemSet::on_update(AppState::InGameExplore).with_system(animate_mini_map.system()),
             );
     }
 }
+
+#[derive(Default, Copy, Clone, PartialEq, Debug)]
+pub struct Position {
+    pub x: f32,
+    pub y: f32,
+}
+
 
 // マップフィールドの属性
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -88,6 +97,25 @@ impl Map {
             _ => panic!("got item should be called on 'Town' Field"),
         }
     }
+
+    pub fn position_to_translation(self, position: &Position, z: f32) -> Transform {
+        Transform::from_translation(Vec3::new(
+            (position.x + 1. / 2.) * self.tile_size,
+            (position.y + 1. / 2.) * self.tile_size,
+            z,
+        ))
+    }
+
+    pub fn position_to_field(self, point: &Position) -> MapField {
+        match self.fields.get(&(point.x as i32, point.y as i32)) {
+            Some(field) => field.clone(),
+            _ => {
+                panic!();
+            }
+        }
+    }
+
+    pub fn warp_position(self, )
 
     pub fn generate_map() -> Self {
         // chunkの縦・横のサイズを取得
@@ -363,7 +391,7 @@ pub fn spawn_mini_map(
     mini_tilemap.spawn_chunk((0, 0)).unwrap();
 }
 
-pub fn update_minimap(
+pub fn animate_minimap(
     time: Res<Time>,
     texture_atlases: Res<Assets<TextureAtlas>>,
     mut query: Query<(&mut Timer, &mut Tilemap), With<MiniMap>>,

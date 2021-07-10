@@ -1,9 +1,11 @@
 use crate::audio::{AudioEvent, AudioKind};
-use crate::character_status::CharacterStatus;
+use crate::character_status::{CharacterStatus, Skill};
+use crate::effects::{Effect, EffectString};
+use crate::events::level;
 use crate::loading::TextureAssets;
-use crate::map::{Map, Position};
+use crate::map::{Field, Map, Position};
 use crate::player::Player;
-use crate::setup::{render_layer, MapCamera, RenderLayer};
+use crate::setup::{render_layer, ForState, MapCamera, RenderLayer};
 use crate::AppState;
 use bevy::prelude::*;
 use core::fmt;
@@ -22,9 +24,19 @@ impl Plugin for EnemiesPlugin {
                 SystemSet::on_enter(AppState::InGameBattle).with_system(setup_battle.system()),
             )
             .add_system_set(
-                SystemSet::on_exit(AppState::InGameBattle).with_system(update_battle.system()),
+                SystemSet::on_exit(AppState::InGameBattle).with_system(clean_up_battle.system()),
             );
     }
+}
+
+#[derive(Default)]
+pub struct Battle {
+    // pub state: BattleState,
+    pub enemy: Enemy,
+    pub entity: Option<Entity>,
+    pub enemy_status: Option<CharacterStatus>,
+    pub ui_status_text: Option<Text>,
+    pub enemy_root_offset: Vec2, // pub ui_entity: Option<Entity>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -57,14 +69,14 @@ pub struct EnemyStatus {
 }
 
 pub struct EnemyData {
-    pub data: HashMap<MapField, EnemyStatus>,
+    pub data: HashMap<Field, EnemyStatus>,
 }
 impl Default for EnemyData {
     fn default() -> Self {
         EnemyData {
             data: HashMap::<_, _>::from_iter(IntoIter::new([
                 (
-                    MapField::Grass,
+                    Field::Grass,
                     EnemyStatus {
                         name: Enemy::Goblin,
                         rate: 20,
@@ -76,7 +88,7 @@ impl Default for EnemyData {
                     },
                 ),
                 (
-                    MapField::Forest,
+                    Field::Forest,
                     EnemyStatus {
                         name: Enemy::Skeleton,
                         rate: 10,
@@ -88,7 +100,7 @@ impl Default for EnemyData {
                     },
                 ),
                 (
-                    MapField::Mountain,
+                    Field::Mountain,
                     EnemyStatus {
                         name: Enemy::Griffin,
                         rate: 5,
@@ -100,7 +112,7 @@ impl Default for EnemyData {
                     },
                 ),
                 (
-                    MapField::Castle,
+                    Field::Castle,
                     EnemyStatus {
                         name: Enemy::Boss,
                         rate: 1,
@@ -117,7 +129,7 @@ impl Default for EnemyData {
 }
 
 impl EnemyData {
-    pub fn create(&self, map_field: &MapField, level: i32) -> CharacterStatus {
+    pub fn create(&self, map_field: &Field, level: i32) -> CharacterStatus {
         let &enemy_status = &self.data[map_field];
         return CharacterStatus {
             name: enemy_status.name.to_string(),
@@ -131,21 +143,17 @@ impl EnemyData {
             defence: (enemy_status.df as f32 * (0.5 + level as f32 / 2.)) as i32,
         };
     }
-    pub fn field_to_enemy(&self, map_field: &MapField) -> Enemy {
+    pub fn field_to_enemy(&self, map_field: &Field) -> Enemy {
         let &enemy_status = &self.data[map_field];
         return enemy_status.name;
     }
-    pub fn field_to_rate(&self, map_field: &MapField) -> i32 {
+    pub fn field_to_rate(&self, map_field: &Field) -> i32 {
         let &enemy_status = &self.data[map_field];
         return enemy_status.rate;
     }
-    pub fn field_to_enemy_skill(&self, map_field: &MapField) -> Skill {
+    pub fn field_to_enemy_skill(&self, map_field: &Field) -> Skill {
         let &enemy_status = &self.data[map_field];
         return enemy_status.skl;
-    }
-    pub fn image_index(&self, map_field: &MapField) -> usize {
-        let enemy_status = &self.data[map_field];
-        return enemy_status.img;
     }
 }
 
@@ -166,8 +174,8 @@ pub fn setup_battle(
 
     // プレイヤーの現在位置を取得
     let (_camera, player_transform, position) = player_camera_query.single().unwrap();
-    let enemy = enemy_data.field_to_enemy(&map_field);
     let map_field = map.position_to_field(position);
+    let enemy = enemy_data.field_to_enemy(&map_field);
     let player_status = player_query.single().unwrap();
     let enemy_status = enemy_data.create(
         &map_field,
@@ -200,7 +208,7 @@ pub fn setup_battle(
         )))
         .insert(GlobalTransform::default())
         .insert(ForState {
-            states: vec![GameState::Battle],
+            states: vec![AppState::InGameBattle],
         })
         .with_children(|child_builder| {
             // let mut battle_camera = OrthographicCameraBundle::new_2d();
@@ -224,7 +232,7 @@ pub fn setup_battle(
                     ..Default::default()
                 })
                 .insert(ForState {
-                    states: vec![GameState::Battle],
+                    states: vec![AppState::InGameBattle],
                 });
             // 敵を追加
             child_builder
@@ -237,7 +245,7 @@ pub fn setup_battle(
                     ..Default::default()
                 })
                 .insert(ForState {
-                    states: vec![GameState::Battle],
+                    states: vec![AppState::InGameBattle],
                 })
                 .with_children(|child_builder| {
                     child_builder
@@ -258,7 +266,7 @@ pub fn setup_battle(
                         .insert(enemy_skill)
                         .insert(enemy)
                         .insert(ForState {
-                            states: vec![GameState::Battle],
+                            states: vec![AppState::InGameBattle],
                         });
                 });
         })
@@ -277,4 +285,24 @@ pub fn setup_battle(
     } else {
         audio_event_writer.send(AudioEvent::Play(AudioKind::BGMBattle));
     }
+}
+
+// シーンが遷移する前にEffectの表示を削除する
+pub fn clean_up_battle(
+    mut commands: Commands,
+    mut query: QuerySet<(
+        Query<(Entity, &Effect, &TextureAtlasSprite, &Handle<TextureAtlas>)>,
+        Query<(Entity, &Effect, &EffectString)>,
+    )>,
+    mut audio_event_writer: EventWriter<AudioEvent>,
+) {
+    for (entity, _effect, _sprite, _texture_atlas_handle) in query.q0_mut().iter_mut() {
+        commands.entity(entity).despawn_recursive();
+    }
+    for (entity, _effect, _string) in query.q1_mut().iter_mut() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMBattleLast));
+    audio_event_writer.send(AudioEvent::Stop(AudioKind::SEAttack));
 }

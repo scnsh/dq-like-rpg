@@ -1,7 +1,7 @@
-use crate::character_status::CharacterStatus;
-use crate::effects::skill_to_effect;
+use crate::character_status::{CharacterStatus, Skill};
+use crate::effects::{skill_to_effect, EffectEvent};
 use crate::enemies::Enemy;
-use crate::inventory::Inventory;
+use crate::inventory::{Inventory, Item};
 use crate::map::{Map, Position};
 use crate::player::{Player, PlayerBattleState};
 use crate::setup::MapCamera;
@@ -63,7 +63,7 @@ pub struct RunState {
 fn explore_events(
     mut events_reader: EventReader<GameEvent>,
     mut map: ResMut<Map>,
-    mut state: ResMut<State<GameState>>,
+    mut state: ResMut<State<AppState>>,
     position_query: Query<&Position, With<MapCamera>>,
     mut player_status_query: Query<(&mut CharacterStatus, &mut Inventory), With<Player>>,
     mut runstate: ResMut<RunState>,
@@ -72,7 +72,7 @@ fn explore_events(
         match event {
             GameEvent::EnemyEncountered(enemy) => {
                 runstate.event = Option::from(GameEvent::EnemyEncountered(*enemy));
-                state.set(GameState::Event).unwrap();
+                state.set(AppState::InGameEvent).unwrap();
             }
             GameEvent::TownArrived(item, visited) => {
                 let position = position_query.single().unwrap();
@@ -91,7 +91,7 @@ fn explore_events(
 
                     // Eventのシーンに遷移
                     runstate.event = Option::from(GameEvent::TownArrived(item.clone(), *visited));
-                    state.set(GameState::Event).unwrap();
+                    state.set(AppState::InGameEvent).unwrap();
                 }
             }
             _ => {
@@ -102,13 +102,13 @@ fn explore_events(
 }
 
 fn battle_events(
-    mut state: ResMut<State<GameState>>,
+    mut state: ResMut<State<AppState>>,
     mut player_status_query: Query<
         (&mut CharacterStatus, &Inventory, &mut Player),
         Changed<Player>,
     >,
     mut enemy_status_query: Query<(&mut CharacterStatus, &Skill, &Enemy), Without<Player>>,
-    mut effect_spawn_events: EventWriter<EffectSpawnEvent>,
+    mut effect_events: EventWriter<EffectEvent>,
     mut runstate: ResMut<RunState>,
 ) {
     for (mut player_status, inventory, mut player) in player_status_query.iter_mut() {
@@ -120,7 +120,7 @@ fn battle_events(
                         attack(&mut player_status, &mut enemy_status, inventory.skill());
                     // エフェクトを表示
                     // TODO: 数字も表示する
-                    effect_spawn_events.send(EffectSpawnEvent {
+                    effect_events.send(EffectEvent {
                         kind: skill_to_effect(inventory.skill()),
                         damage_or_heal: dmg_or_heal,
                         is_player_attack: true,
@@ -133,20 +133,20 @@ fn battle_events(
                         if matches!(enemy, Enemy::Boss) {
                             // 最終戦闘に勝利
                             runstate.event = Option::from(GameEvent::WinLast);
-                            state.set(GameState::Event).unwrap();
+                            state.set(AppState::InGameEvent).unwrap();
                         } else {
                             // 経験値を追加する
                             let levelup =
                                 player_status.add_exp(enemy_status.hp_max / 10, &inventory);
                             runstate.event = Option::from(GameEvent::Win(levelup));
-                            state.set(GameState::Event).unwrap();
+                            state.set(AppState::InGameEvent).unwrap();
                         }
                         player.battle_state = PlayerBattleState::Select
                     }
                     // 敵の攻撃を実施
                     let dmg = attack(&mut enemy_status, &mut player_status, *skill);
                     // エフェクトを表示
-                    effect_spawn_events.send(EffectSpawnEvent {
+                    effect_events.send(EffectEvent {
                         kind: skill_to_effect(*skill),
                         damage_or_heal: dmg,
                         is_player_attack: false,
@@ -157,13 +157,22 @@ fn battle_events(
                     // 自分のHPが0になったら敗北
                     if player_status.hp_current <= 0 {
                         runstate.event = Option::from(GameEvent::Lose);
-                        state.set(GameState::Event).unwrap();
+                        state.set(AppState::InGameEvent).unwrap();
                         player.battle_state = PlayerBattleState::Select
                     }
                 }
             }
         }
     }
+}
+
+// 敵のレベル設定
+pub fn level(player_lv: i32, enemy: Enemy) -> i32 {
+    let mut rng = rand::thread_rng();
+    if matches!(enemy, Enemy::Boss) {
+        return 1;
+    }
+    return 1 + rng.gen_range(0..(player_lv / 2).clamp(1, 5));
 }
 
 // 攻撃計算
@@ -190,7 +199,7 @@ pub fn attack(
         } else {
             //ダメージ
             let mut rng = rand::thread_rng();
-            let mut dmg = attack + rng.gen_range(0, &attack) - rng.gen_range(0, defence);
+            let mut dmg = attack + rng.gen_range(0..attack) - rng.gen_range(0..defence);
             dmg = dmg.clamp(1, 999);
             other_status.hp_current = (other_status.hp_current - dmg).clamp(0, 999);
             dmg

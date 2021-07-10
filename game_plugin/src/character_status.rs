@@ -1,8 +1,6 @@
-use crate::inventory::Inventory;
-use crate::AppState;
-use bevy::prelude::*;
+use crate::inventory::{Inventory, Item};
 use core::fmt;
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
 
 // キャラクターのステータス
 #[derive(Clone)]
@@ -110,5 +108,27 @@ impl CharacterStatus {
         self.mp_max = self.mp_max.clamp(1, 999);
         self.hp_current = self.hp_current.clamp(1, 999);
         self.mp_current = self.mp_current.clamp(1, 999);
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum Skill {
+    Sword,
+    Spell(Item),
+    Arrow,
+    Wind,
+    Death,
+}
+
+impl Display for Skill {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            Skill::Spell(item) => {
+                write!(f, "{}", item)
+            }
+            _ => {
+                write!(f, "{:?}", self)
+            }
+        }
     }
 }

@@ -24,7 +24,7 @@ web = [
 ]
 
 dev = [
-    "bevy/dinamic",
+    "bevy/dynamic",
     "native"
 ]
 

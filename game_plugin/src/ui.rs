@@ -1,12 +1,12 @@
 use crate::audio::{AudioEvent, AudioKind};
 use crate::character_status::CharacterStatus;
 use crate::enemies::EnemyData;
-use crate::events::GameEvent;
+use crate::events::{level, GameEvent, RunState};
 use crate::inventory::Inventory;
 use crate::loading::FontAssets;
 use crate::map::{Map, Position};
 use crate::player::Player;
-use crate::setup::MapCamera;
+use crate::setup::{ForState, MapCamera};
 use crate::AppState;
 use bevy::prelude::*;
 
@@ -17,7 +17,7 @@ impl Plugin for UiPlugin {
         app.add_system_set(
             SystemSet::on_enter(AppState::InGameExplore)
                 .with_system(setup_status_ui.system())
-                .with_system(setup_map_ui.system()),
+                .with_system(setup_explore_inventory_ui.system()),
         )
         .add_system_set(
             SystemSet::on_update(AppState::InGameExplore).with_system(update_status_ui.system()),
@@ -48,13 +48,11 @@ pub struct UiStatusEnemyText;
 pub struct UiStatusInventoryText;
 // イベント画面のテキスト
 pub struct UiEventText;
-// タイトル画面のテキスト
-pub struct UiTitleText;
 
 // ステータスウインドウを表示
 fn setup_status_ui(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    font_assets: Res<FontAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     player_query: Query<&CharacterStatus, With<Player>>,
 ) {
@@ -86,7 +84,7 @@ fn setup_status_ui(
             ..Default::default()
         })
         .insert(ForState {
-            states: vec![GameState::Map, GameState::Battle],
+            states: vec![AppState::InGameExplore, AppState::InGameBattle],
         })
         .with_children(|parent| {
             // ステータスウインドウ(背景)
@@ -106,7 +104,7 @@ fn setup_status_ui(
                     ..Default::default()
                 })
                 .insert(ForState {
-                    states: vec![GameState::Map, GameState::Battle],
+                    states: vec![AppState::InGameExplore, AppState::InGameBattle],
                 })
                 .with_children(|parent| {
                     // ステータスウインドウ(中身)
@@ -123,7 +121,7 @@ fn setup_status_ui(
                             ..Default::default()
                         })
                         .insert(ForState {
-                            states: vec![GameState::Map, GameState::Battle],
+                            states: vec![AppState::InGameExplore, AppState::InGameBattle],
                         })
                         .with_children(|parent| {
                             // テキスト
@@ -136,8 +134,7 @@ fn setup_status_ui(
                                     text: Text::with_section(
                                         format!("{}", player_status),
                                         TextStyle {
-                                            font: asset_server
-                                                .load("fonts/PixelMplus12-Regular.ttf"),
+                                            font: font_assets.pixel_mplus.clone(),
                                             font_size: 30.0,
                                             color: Color::WHITE,
                                         },
@@ -150,7 +147,7 @@ fn setup_status_ui(
                                 })
                                 .insert(UiStatusPlayerText)
                                 .insert(ForState {
-                                    states: vec![GameState::Map, GameState::Battle],
+                                    states: vec![AppState::InGameExplore, AppState::InGameBattle],
                                 });
                         });
                 });
@@ -167,6 +164,127 @@ fn update_status_ui(
             text.sections[0].value = format!("{}", player_status);
         }
     }
+}
+
+fn setup_explore_inventory_ui(
+    mut commands: Commands,
+    font_assets: Res<FontAssets>,
+    inventory_query: Query<&Inventory, With<Player>>,
+    mut audio_event_writer: EventWriter<AudioEvent>,
+) {
+    let inventory = inventory_query.single().unwrap();
+    // インベントリウインドウ
+    // 左下位置を absolute に指定
+    commands
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                size: Size::new(Val::Percent(25.), Val::Percent(60.)),
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    left: Val::Percent(2.),
+                    bottom: Val::Percent(2.),
+                    ..Default::default()
+                },
+                // justify_content: JustifyContent::SpaceBetween,
+                // 枠線はなし
+                // border: Rect::all(Val::Px(2.0)),
+                // ウインドウの外側のマージン
+                margin: Rect::all(Val::Percent(3.0)),
+                // 左下に設定
+                // align_self: AlignSelf::FlexEnd,
+                ..Default::default()
+            },
+            visible: Visible {
+                is_visible: false,
+                is_transparent: true,
+            },
+            // material: materials.add(Color::rgb(0.95, 0.95, 0.95).into()),
+            ..Default::default()
+        })
+        .insert(ForState {
+            states: vec![AppState::InGameExplore],
+        })
+        // .insert(UiMap)
+        .with_children(|parent| {
+            // 左上のウインドウ(中身)
+            parent
+                .spawn_bundle(NodeBundle {
+                    style: Style {
+                        size: Size::new(Val::Percent(100.), Val::Percent(100.)),
+                        // padding: Rect::all(Val::Px(10.)),
+                        // align_items: AlignItems::FlexEnd,
+                        // justify_content: JustifyContent::FlexStart,
+                        ..Default::default()
+                    },
+                    visible: Visible {
+                        is_visible: false,
+                        is_transparent: true,
+                    },
+                    // material: materials.add(Color::BLACK.into()),
+                    ..Default::default()
+                })
+                .insert(ForState {
+                    states: vec![AppState::InGameExplore],
+                })
+                // .insert(UiMap)
+                .with_children(|parent| {
+                    // 左上のウインドウ(中身)
+                    parent
+                        .spawn_bundle(NodeBundle {
+                            style: Style {
+                                size: Size::new(Val::Percent(100.), Val::Percent(100.)),
+                                padding: Rect::all(Val::Px(10.)),
+                                align_items: AlignItems::FlexEnd,
+                                justify_content: JustifyContent::FlexStart,
+                                ..Default::default()
+                            },
+                            visible: Visible {
+                                is_visible: false,
+                                is_transparent: true,
+                            },
+                            // material: materials.add(Color::BLACK.into()),
+                            ..Default::default()
+                        })
+                        .insert(ForState {
+                            states: vec![AppState::InGameExplore],
+                        })
+                        // .insert(UiMap)
+                        .with_children(|parent| {
+                            // テキスト
+                            parent
+                                .spawn_bundle(TextBundle {
+                                    style: Style {
+                                        margin: Rect::all(Val::Px(5.)),
+                                        ..Default::default()
+                                    },
+                                    text: Text::with_section(
+                                        format!("{}", inventory),
+                                        TextStyle {
+                                            font: font_assets.pixel_mplus.clone(),
+                                            font_size: 30.0,
+                                            color: Color::WHITE,
+                                        },
+                                        TextAlignment {
+                                            horizontal: HorizontalAlign::Left,
+                                            ..Default::default()
+                                        },
+                                    ),
+                                    // visible: Visible {
+                                    //     is_visible: false,
+                                    //     is_transparent: true,
+                                    // },
+                                    ..Default::default()
+                                })
+                                .insert(UiStatusInventoryText)
+                                .insert(ForState {
+                                    states: vec![AppState::InGameExplore],
+                                });
+                        });
+                });
+        })
+        .id();
+
+    audio_event_writer.send(AudioEvent::Play(AudioKind::BGMExplore));
 }
 
 fn setup_battle_inventory_ui(
@@ -200,7 +318,7 @@ fn setup_battle_inventory_ui(
             ..Default::default()
         })
         .insert(ForState {
-            states: vec![GameState::Battle],
+            states: vec![AppState::InGameBattle],
         })
         .with_children(|parent| {
             parent
@@ -212,7 +330,7 @@ fn setup_battle_inventory_ui(
                     ..Default::default()
                 })
                 .insert(ForState {
-                    states: vec![GameState::Battle],
+                    states: vec![AppState::InGameBattle],
                 })
                 .with_children(|parent| {
                     // 左上のウインドウ(中身)
@@ -234,7 +352,7 @@ fn setup_battle_inventory_ui(
                             ..Default::default()
                         })
                         .insert(ForState {
-                            states: vec![GameState::Battle],
+                            states: vec![AppState::InGameBattle],
                         })
                         .with_children(|parent| {
                             // テキスト
@@ -265,7 +383,7 @@ fn setup_battle_inventory_ui(
                                 })
                                 .insert(UiStatusInventoryText)
                                 .insert(ForState {
-                                    states: vec![GameState::Battle],
+                                    states: vec![AppState::InGameBattle],
                                 });
                         });
                 });
@@ -278,11 +396,13 @@ fn setup_enemy_status_ui(
     mut materials: ResMut<Assets<ColorMaterial>>,
     map: Res<Map>,
     enemy_data: Res<EnemyData>,
+    player_query: Query<&CharacterStatus, With<Player>>,
     player_camera_query: Query<(&MapCamera, &Transform, &Position)>,
 ) {
     // 敵のステータスを表示
     let (_camera, _player_transform, position) = player_camera_query.single().unwrap();
-    let field = position_to_field(&map, position);
+    let field = map.position_to_field(position);
+    let player_status = player_query.single().unwrap();
     let enemy_status = enemy_data.create(
         &field,
         level(player_status.lv, enemy_data.field_to_enemy(&field)),
@@ -310,7 +430,7 @@ fn setup_enemy_status_ui(
             ..Default::default()
         })
         .insert(ForState {
-            states: vec![GameState::Battle],
+            states: vec![AppState::InGameBattle],
         })
         .with_children(|parent| {
             parent
@@ -330,7 +450,7 @@ fn setup_enemy_status_ui(
                     ..Default::default()
                 })
                 .insert(ForState {
-                    states: vec![GameState::Battle],
+                    states: vec![AppState::InGameBattle],
                 })
                 .with_children(|parent| {
                     parent
@@ -354,7 +474,7 @@ fn setup_enemy_status_ui(
                             ..Default::default()
                         })
                         .insert(ForState {
-                            states: vec![GameState::Battle],
+                            states: vec![AppState::InGameBattle],
                         })
                         .insert(UiStatusEnemyText);
                 });
@@ -417,7 +537,7 @@ fn event_text(state: &RunState) -> String {
 
 fn setup_event_ui(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    font_assets: Res<FontAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     runstate: Res<RunState>,
     mut audio_event_writer: EventWriter<AudioEvent>,
@@ -442,7 +562,7 @@ fn setup_event_ui(
             ..Default::default()
         })
         .insert(ForState {
-            states: vec![GameState::Event],
+            states: vec![AppState::InGameEvent],
         })
         .with_children(|parent| {
             // ステータスウインドウ(中身)
@@ -463,7 +583,7 @@ fn setup_event_ui(
                     ..Default::default()
                 })
                 .insert(ForState {
-                    states: vec![GameState::Event],
+                    states: vec![AppState::InGameEvent],
                 })
                 .with_children(|parent| {
                     // テキスト
@@ -474,9 +594,9 @@ fn setup_event_ui(
                                 ..Default::default()
                             },
                             text: Text::with_section(
-                                runstate.event_text(),
+                                event_text(&*runstate),
                                 TextStyle {
-                                    font: asset_server.load("fonts/PixelMplus12-Regular.ttf"),
+                                    font: font_assets.pixel_mplus.clone(),
                                     font_size: 90.0,
                                     color: Color::WHITE,
                                 },
@@ -492,7 +612,7 @@ fn setup_event_ui(
                             ..Default::default()
                         })
                         .insert(ForState {
-                            states: vec![GameState::Event],
+                            states: vec![AppState::InGameEvent],
                         })
                         .insert(UiEventText);
                 });
@@ -512,8 +632,3 @@ fn setup_event_ui(
         _ => {}
     }
 }
-
-// pub fn clean_up_event(mut audio_event_writer: EventWriter<AudioEvent>) {
-//     audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMWin));
-//     audio_event_writer.send(AudioEvent::Stop(AudioKind::SETown));
-// }

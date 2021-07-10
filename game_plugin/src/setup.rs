@@ -1,4 +1,4 @@
-use crate::explore_actions::ExploreAction;
+use crate::actions::Action;
 use crate::map::Position;
 use crate::AppState;
 use bevy::prelude::*;
@@ -9,16 +9,16 @@ pub struct SetupPlugin;
 // Actions can then be used as a resource in other systems to act on the player input.
 impl Plugin for SetupPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.init_resource::<EventActions>()
-            .add_startup_system(setup_camera.system())
+        app.add_startup_system(setup_camera.system())
             .add_system_set(
                 SystemSet::on_enter(AppState::Menu).with_system(state_enter_despawn.system()),
             )
             .add_system_set(
-                SystemSet::on_enter(AppState::Loading).with_system(state_enter_despawn.system()),
+                SystemSet::on_enter(AppState::InGameMap).with_system(state_enter_despawn.system()),
             )
             .add_system_set(
-                SystemSet::on_enter(AppState::InGameMap).with_system(state_enter_despawn.system()),
+                SystemSet::on_enter(AppState::InGameExplore)
+                    .with_system(state_enter_despawn.system()),
             )
             .add_system_set(
                 SystemSet::on_enter(AppState::InGameBattle)
@@ -31,6 +31,11 @@ impl Plugin for SetupPlugin {
     }
 }
 
+/// 1つの状態でのみ必要とされるエンティティにタグを付けるコンポーネント
+pub struct ForState<T> {
+    pub states: Vec<T>,
+}
+
 #[derive(Debug)]
 pub enum MapCameraState {
     Stop,
@@ -39,14 +44,14 @@ pub enum MapCameraState {
 
 pub struct MapCamera {
     // どちらにむかう入力が入っているかを保持する
-    pub direction: ExploreAction,
+    pub direction: Option<Action>,
     pub destination: Position,
     pub state: MapCameraState,
 }
 impl Default for MapCamera {
     fn default() -> Self {
         MapCamera {
-            direction: ExploreAction::None,         // 開始時は向きなし
+            direction: None,                        // 開始時は向きなし
             destination: Position { x: 0., y: 0. }, // 開始時は下向き
             state: MapCameraState::Stop,
         }
@@ -85,12 +90,15 @@ pub fn setup_camera(mut commands: Commands) {
         .insert(MapCamera::default())
         .insert(Position { x: 0., y: 0. })
         .insert(Timer::from_seconds(0.25, true));
+
+    // UI用カメラを追加する
+    commands.spawn_bundle(UiCameraBundle::default());
 }
 
 pub fn state_enter_despawn(
     mut commands: Commands,
-    state: ResMut<State<GameState>>,
-    query: Query<(Entity, &ForState<GameState>)>,
+    state: ResMut<State<AppState>>,
+    query: Query<(Entity, &ForState<AppState>)>,
 ) {
     for (entity, for_state) in &mut query.iter() {
         if !for_state.states.contains(&state.current()) {

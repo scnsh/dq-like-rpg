@@ -1,5 +1,7 @@
-use crate::generate::{Map, MAP_SIZE};
-use crate::{AppState, GameState};
+use crate::actions::PlayerActions;
+use crate::audio::{AudioEvent, AudioKind};
+use crate::events::{GameEvent, RunState};
+use crate::AppState;
 use bevy::prelude::*;
 
 pub struct EventActionsPlugin;
@@ -8,58 +10,24 @@ pub struct EventActionsPlugin;
 // Actions can then be used as a resource in other systems to act on the player input.
 impl Plugin for EventActionsPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.init_resource::<EventActions>().add_system_set(
+        app.add_system_set(
             SystemSet::on_update(AppState::InGameEvent)
-                .with_system(set_event_actions.system())
-                .label("event")
                 .with_system(update_events.system())
                 .after("event"),
+        )
+        .add_system_set(
+            SystemSet::on_exit(AppState::InGameEvent).with_system(clean_up_event.system()),
         );
     }
 }
 
-#[derive(Clone, Copy)]
-pub enum EventAction {
-    Return,
-    None,
-}
-
-#[derive(Default)]
-pub struct EventActions {
-    pub player_commands: EventAction,
-}
-
-fn set_event_actions(mut actions: ResMut<MapActions>, keyboard_input: Res<Input<KeyCode>>) {
-    if GameControl::Return.just_released(&keyboard_input)
-        || GameControl::Return.pressed(&keyboard_input)
-    {
-        let mut player_commands = EventAction::None;
-
-        if GameControl::Return.just_released(&keyboard_input) {
-            if GameControl::Return.pressed(&keyboard_input) {
-                player_commands = EventAction::Return;
-            } else {
-                player_commands = EventAction::None;
-            }
-        } else {
-            player_commands = EventAction::None;
-        }
-
-        if player_commands != EventAction::None {
-            actions.player_commands = player_commands;
-        }
-    } else {
-        actions.player_commands = EventAction::None;
-    }
-}
-
 fn update_events(
-    mut actions: ResMut<EventActions>,
+    actions: Res<PlayerActions>,
     runstate: Res<RunState>,
     mut state: ResMut<State<AppState>>,
-    mut player_query: Query<(&mut CharacterStatus, &mut Inventory, &mut Player, Entity)>,
+    mut keyboard_input: ResMut<Input<KeyCode>>,
 ) {
-    if matches!(map_camera.direction, MapAction::None) {
+    if matches!(actions.action, None) {
         return;
     }
 
@@ -67,55 +35,53 @@ fn update_events(
     match event {
         //バトル画面に遷移
         GameEvent::EnemyEncountered(_enemy) => {
-            state.set(GameState::Battle).unwrap();
+            state.set(AppState::InGameBattle).unwrap();
         }
         //マップ画面に遷移
         GameEvent::TownArrived(_, _) => {
-            state.set(GameState::Map).unwrap();
+            state.set(AppState::InGameExplore).unwrap();
         }
         //勝ったのでマップ画面に遷移
         GameEvent::Win(_levelup) => {
-            state.set(GameState::Map).unwrap();
+            state.set(AppState::InGameExplore).unwrap();
         }
         //負けたのでタイトルに遷移
         GameEvent::Lose => {
-            // Playerを削除する
-            for (_player_camera, _inventory, _player, entity) in player_query.iter_mut() {
-                commands.entity(entity).despawn_recursive();
-            }
-            // Tilemapを削除する
-            for (entity, _tilemap) in tilemap.iter_mut() {
-                commands.entity(entity).despawn_recursive();
-            }
-            state.set(GameState::Title).unwrap();
+            // // Playerを削除する
+            // for (_player_camera, _inventory, _player, entity) in player_query.iter_mut() {
+            //     commands.entity(entity).despawn_recursive();
+            // }
+            // // Tilemapを削除する
+            // for (entity, _tilemap) in tilemap.iter_mut() {
+            //     commands.entity(entity).despawn_recursive();
+            // }
+            state.set(AppState::Menu).unwrap();
         }
         // TODO: タイトルに戻って経験値引き継ぎ要素を入れる
         GameEvent::WinLast => {
-            // Playerを削除する
-            for (_player_camera, _inventory, _player, entity) in player_query.iter_mut() {
-                commands.entity(entity).despawn_recursive();
-            }
-            state.set(GameState::Title).unwrap();
+            // // Playerを削除する
+            // for (_player_camera, _inventory, _player, entity) in player_query.iter_mut() {
+            //     commands.entity(entity).despawn_recursive();
+            // }
+            state.set(AppState::Menu).unwrap();
         }
     }
+    actions.reset_all(&mut keyboard_input);
 }
 
-impl GameControl {
-    fn just_released(&self, keyboard_input: &Res<Input<KeyCode>>) -> bool {
-        match self {
-            GameControl::Return => keyboard_input.just_released(KeyCode::Return),
+pub fn clean_up_event(mut audio_event_writer: EventWriter<AudioEvent>, runstate: Res<RunState>) {
+    let event = runstate.event.as_ref().unwrap();
+    match event {
+        GameEvent::Win(_levelup) => {
+            audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMWin));
         }
-    }
-
-    fn pressed(&self, keyboard_input: &Res<Input<KeyCode>>) -> bool {
-        match self {
-            GameControl::Return => keyboard_input.pressed(KeyCode::Return),
+        GameEvent::Lose => {
+            println!("stop music");
+            audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMLose));
         }
-    }
-
-    fn just_pressed(&self, keyboard_input: &Res<Input<KeyCode>>) -> bool {
-        match self {
-            GameControl::Return => keyboard_input.just_pressed(KeyCode::Return),
+        GameEvent::TownArrived(_, _) => {
+            audio_event_writer.send(AudioEvent::Stop(AudioKind::SETown));
         }
+        _ => {}
     }
 }

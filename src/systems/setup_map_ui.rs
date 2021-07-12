@@ -14,7 +14,7 @@ pub fn setup_map_ui(
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
-                size: Size::new(Val::Percent(25.), Val::Percent(60.)),
+                size: Size::new(Val::Percent(25.), Val::Percent(65.)),
                 position_type: PositionType::Absolute,
                 position: Rect {
                     left: Val::Percent(2.),

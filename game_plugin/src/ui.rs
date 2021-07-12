@@ -178,7 +178,7 @@ fn setup_explore_inventory_ui(
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
-                size: Size::new(Val::Percent(25.), Val::Percent(60.)),
+                size: Size::new(Val::Percent(25.), Val::Percent(65.)),
                 position_type: PositionType::Absolute,
                 position: Rect {
                     left: Val::Percent(2.),
@@ -261,7 +261,7 @@ fn setup_explore_inventory_ui(
                                         format!("{}", inventory),
                                         TextStyle {
                                             font: font_assets.pixel_mplus.clone(),
-                                            font_size: 30.0,
+                                            font_size: 28.0,
                                             color: Color::WHITE,
                                         },
                                         TextAlignment {

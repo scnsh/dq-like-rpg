@@ -17,7 +17,7 @@ impl Plugin for MapPlugin {
             .add_plugins(TilemapDefaultPlugins)
             .add_system_set(
                 SystemSet::on_enter(AppState::InGameMap)
-                    .with_system(generate_map.system())
+                    .with_system(regenerate_map.system())
                     .label("generate"),
             )
             .add_system_set(
@@ -278,7 +278,7 @@ impl Map {
     }
 }
 
-fn generate_map(
+fn regenerate_map(
     mut commands: Commands,
     mut map: ResMut<Map>,
     tilemap: Query<Entity, With<TileMap>>,

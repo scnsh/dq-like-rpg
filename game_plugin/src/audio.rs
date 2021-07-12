@@ -158,7 +158,7 @@ fn setup_audio(audio_assets: Res<AudioAssets>, mut audio_state: ResMut<AudioStat
 }
 
 fn stop_audio(audio: Res<Audio>, mut audio_state: ResMut<AudioState>) {
-    for (name, (channel, state)) in audio_state.channels.iter_mut() {
+    for (_name, (channel, state)) in audio_state.channels.iter_mut() {
         audio.stop_channel(channel);
         state.paused = false;
         state.stopped = false;

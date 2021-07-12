@@ -1,12 +1,41 @@
-use crate::components::UiTitleText;
-use crate::resources::{ForState, GameState};
+use crate::loading::FontAssets;
+use crate::map::TileMap;
+use crate::player::Player;
+use crate::setup::ForState;
+use crate::AppState;
 use bevy::prelude::*;
 
-pub fn setup_title_ui(
+pub struct MenuPlugin;
+
+/// This plugin is responsible for the game menu (containing only one button...)
+/// The menu is only drawn during the State `GameState::Menu` and is removed when that state is exited
+impl Plugin for MenuPlugin {
+    fn build(&self, app: &mut AppBuilder) {
+        app.add_system_set(SystemSet::on_enter(AppState::Menu).with_system(setup_menu.system()))
+            .add_system_set(SystemSet::on_update(AppState::Menu).with_system(update_menu.system()));
+    }
+}
+
+// タイトル画面のテキスト
+pub struct UiTitleText;
+
+pub fn setup_menu(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    font_assets: Res<FontAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    player: Query<Entity, With<Player>>,
+    tilemap: Query<Entity, With<TileMap>>,
 ) {
+    // 再プレイ時のために初期化
+    // Playerを削除する
+    for entity in player.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+    // Tilemapを削除する
+    for entity in tilemap.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
     // 親ノード
     commands
         .spawn_bundle(NodeBundle {
@@ -24,7 +53,7 @@ pub fn setup_title_ui(
             ..Default::default()
         })
         .insert(ForState {
-            states: vec![GameState::Title],
+            states: vec![AppState::Menu],
         })
         .with_children(|parent| {
             // 上部のタイトル
@@ -43,7 +72,7 @@ pub fn setup_title_ui(
                     ..Default::default()
                 })
                 .insert(ForState {
-                    states: vec![GameState::Title],
+                    states: vec![AppState::Menu],
                 })
                 .with_children(|parent| {
                     // テキスト
@@ -58,7 +87,7 @@ pub fn setup_title_ui(
                             text: Text::with_section(
                                 "DQ-like RPG",
                                 TextStyle {
-                                    font: asset_server.load("fonts/PixelMplus12-Regular.ttf"),
+                                    font: font_assets.pixel_mplus.clone(),
                                     font_size: 80.0,
                                     color: Color::WHITE,
                                 },
@@ -67,7 +96,7 @@ pub fn setup_title_ui(
                             ..Default::default()
                         })
                         .insert(ForState {
-                            states: vec![GameState::Title],
+                            states: vec![AppState::Menu],
                         });
                 });
             parent
@@ -85,7 +114,7 @@ pub fn setup_title_ui(
                     ..Default::default()
                 })
                 .insert(ForState {
-                    states: vec![GameState::Title],
+                    states: vec![AppState::Menu],
                 })
                 .with_children(|parent| {
                     // テキスト
@@ -100,7 +129,7 @@ pub fn setup_title_ui(
                             text: Text::with_section(
                                 "Press 'Space' to start",
                                 TextStyle {
-                                    font: asset_server.load("fonts/PixelMplus12-Regular.ttf"),
+                                    font: font_assets.pixel_mplus.clone(),
                                     font_size: 80.0,
                                     color: Color::WHITE,
                                 },
@@ -109,7 +138,7 @@ pub fn setup_title_ui(
                             ..Default::default()
                         })
                         .insert(ForState {
-                            states: vec![GameState::Title],
+                            states: vec![AppState::Menu],
                         })
                         .insert(Timer::from_seconds(1., true))
                         .insert(UiTitleText);
@@ -117,10 +146,7 @@ pub fn setup_title_ui(
         });
 }
 
-pub fn update_title_ui(
-    time: Res<Time>,
-    mut query: Query<(&mut Timer, &mut Text), With<UiTitleText>>,
-) {
+pub fn update_menu(time: Res<Time>, mut query: Query<(&mut Timer, &mut Text), With<UiTitleText>>) {
     for (mut timer, mut text) in query.iter_mut() {
         timer.tick(time.delta());
         if timer.finished() {

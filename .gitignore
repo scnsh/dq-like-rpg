@@ -11,3 +11,5 @@ Cargo.lock
 
 # Igreno idea files
 .idea/*
+
+build/web/

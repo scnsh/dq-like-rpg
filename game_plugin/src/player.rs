@@ -35,7 +35,6 @@ impl Plugin for PlayerPlugin {
 // システムラベル(SystemLabel)
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum PlayerMovement {
-    Input,
     Movement,
 }
 

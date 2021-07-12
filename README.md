@@ -27,9 +27,11 @@ then point your browser to http://127.0.0.1:4000/
 
 ## Build and run native version
 ```
-cargo make run
+cargo run --features native
 ```
-This project have multi-target(WASM/Native) and use [template](https://github.com/mrk-its/bevy_webgl2_app_template)
+This project have multi-target(WASM/Native) and use [template](https://github.com/mrk-its/bevy_webgl2_app_template).
+
+Also use [game template](https://github.com/NiklasEi/bevy_game_template).
 
 # How to Play
 

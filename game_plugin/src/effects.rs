@@ -251,7 +251,6 @@ fn clean_up_effects(
         Query<(Entity, &Effect, &TextureAtlasSprite, &Handle<TextureAtlas>)>,
         Query<(Entity, &Effect, &EffectString)>,
     )>,
-    mut audio_event_writer: EventWriter<AudioEvent>,
 ) {
     for (entity, _effect, _sprite, _texture_atlas_handle) in query.q0_mut().iter_mut() {
         commands.entity(entity).despawn_recursive();
@@ -259,6 +258,4 @@ fn clean_up_effects(
     for (entity, _effect, _string) in query.q1_mut().iter_mut() {
         commands.entity(entity).despawn_recursive();
     }
-    audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMBattleLast));
-    audio_event_writer.send(AudioEvent::Stop(AudioKind::SEAttack));
 }

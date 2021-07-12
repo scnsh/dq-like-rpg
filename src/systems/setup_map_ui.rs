@@ -123,7 +123,3 @@ pub fn setup_map_ui(
 
     audio_event_writer.send(AudioEvent::Play(AudioKind::BGMMap));
 }
-
-pub fn clean_up_map(mut audio_event_writer: EventWriter<AudioEvent>) {
-    audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMMap));
-}

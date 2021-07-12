@@ -21,7 +21,7 @@ impl Plugin for PlayerPlugin {
         app.add_system_set(
             SystemSet::on_update(AppState::InGameMap)
                 .with_system(spawn_player.system())
-                .after("generate"),
+                .after("spawn_map"),
         )
         .add_system_set(
             SystemSet::on_update(AppState::InGameExplore)
@@ -54,10 +54,16 @@ pub struct Player {
 fn spawn_player(
     mut commands: Commands,
     map: Res<Map>,
+    player: Query<Entity, With<Player>>,
     texture_atlas: Res<PlayerAtlas>,
     mut camera_query: Query<(Entity, &mut Transform, &mut Position, &mut MapCamera)>,
     mut app_state: ResMut<State<AppState>>,
 ) {
+    // Playerを削除する(2日目以降)
+    for entity in player.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
     for (camera, mut transform, mut position, mut map_camera) in camera_query.iter_mut() {
         // カメラ位置をリセットする(GameOver後のリスタートも想定する)
         *transform =

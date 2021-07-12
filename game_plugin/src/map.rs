@@ -17,10 +17,17 @@ impl Plugin for MapPlugin {
             .add_plugins(TilemapDefaultPlugins)
             .add_system_set(
                 SystemSet::on_enter(AppState::InGameMap)
-                    .with_system(spawn_map.system())
-                    .label("generate")
-                    .with_system(spawn_mini_map.system())
+                    .with_system(generate_map.system())
                     .label("generate"),
+            )
+            .add_system_set(
+                SystemSet::on_enter(AppState::InGameMap)
+                    .with_system(spawn_map.system())
+                    .label("spawn_map")
+                    .after("generate")
+                    .with_system(spawn_mini_map.system())
+                    .label("spawn_map")
+                    .after("generate"),
             )
             .add_system_set(
                 SystemSet::on_update(AppState::InGameExplore)
@@ -268,6 +275,25 @@ impl Map {
         }
 
         map
+    }
+}
+
+fn generate_map(
+    mut commands: Commands,
+    mut map: ResMut<Map>,
+    tilemap: Query<Entity, With<TileMap>>,
+) {
+    let new_map = Map::generate_map();
+    map.collisions = new_map.collisions.clone();
+    map.blinks_on_mini_tiles = new_map.blinks_on_mini_tiles.clone();
+    map.blink_status = new_map.blink_status.clone();
+    map.fields = new_map.fields.clone();
+    map.tiles = new_map.tiles.clone();
+    map.mini_tiles = new_map.mini_tiles.clone();
+
+    // Tilemapを削除する(2回目以降)
+    for entity in tilemap.iter() {
+        commands.entity(entity).despawn_recursive();
     }
 }
 

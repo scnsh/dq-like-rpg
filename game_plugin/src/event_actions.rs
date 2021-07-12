@@ -14,9 +14,6 @@ impl Plugin for EventActionsPlugin {
             SystemSet::on_update(AppState::InGameEvent)
                 .with_system(update_events.system())
                 .after("event"),
-        )
-        .add_system_set(
-            SystemSet::on_exit(AppState::InGameEvent).with_system(clean_up_event.system()),
         );
     }
 }
@@ -46,6 +43,7 @@ fn update_events(
             state.set(AppState::InGameExplore).unwrap();
         }
         //負けたのでタイトルに遷移
+        // TODO: 経験値を更新してマップに戻らせる
         GameEvent::Lose => {
             // // Playerを削除する
             // for (_player_camera, _inventory, _player, entity) in player_query.iter_mut() {
@@ -63,25 +61,12 @@ fn update_events(
             // for (_player_camera, _inventory, _player, entity) in player_query.iter_mut() {
             //     commands.entity(entity).despawn_recursive();
             // }
+            // // Tilemapを削除する
+            // for (entity, _tilemap) in tilemap.iter_mut() {
+            //     commands.entity(entity).despawn_recursive();
+            // }
             state.set(AppState::Menu).unwrap();
         }
     }
     actions.reset_all(&mut keyboard_input);
-}
-
-pub fn clean_up_event(mut audio_event_writer: EventWriter<AudioEvent>, runstate: Res<RunState>) {
-    let event = runstate.event.as_ref().unwrap();
-    match event {
-        GameEvent::Win(_levelup) => {
-            audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMWin));
-        }
-        GameEvent::Lose => {
-            println!("stop music");
-            audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMLose));
-        }
-        GameEvent::TownArrived(_, _) => {
-            audio_event_writer.send(AudioEvent::Stop(AudioKind::SETown));
-        }
-        _ => {}
-    }
 }

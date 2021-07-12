@@ -15,9 +15,6 @@ impl Plugin for ExploreActionsPlugin {
             SystemSet::on_update(AppState::InGameExplore)
                 .with_system(update_position.system())
                 .after("movement"),
-        )
-        .add_system_set(
-            SystemSet::on_exit(AppState::InGameExplore).with_system(clean_up_explore.system()),
         );
     }
 }
@@ -108,8 +105,4 @@ fn update_position(
             *transform = map.position_to_translation(&position, transform.translation.z);
         }
     }
-}
-
-pub fn clean_up_explore(mut audio_event_writer: EventWriter<AudioEvent>) {
-    audio_event_writer.send(AudioEvent::Stop(AudioKind::BGMExplore));
 }

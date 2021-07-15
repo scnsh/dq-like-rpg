@@ -1,22 +1,24 @@
-use crate::audio::{AudioEvent, AudioKind};
-use crate::character_status::{CharacterStatus, Skill};
-use crate::effects::{Effect, EffectString};
-use crate::events::level;
-use crate::loading::TextureAssets;
-use crate::map::{Field, Map, Position};
-use crate::player::Player;
-use crate::setup::{render_layer, ForState, MapCamera, RenderLayer};
-use crate::AppState;
-use bevy::prelude::*;
 use core::fmt;
 use std::array::IntoIter;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::iter::FromIterator;
 
+use bevy::prelude::*;
+use rand::Rng;
+
+use crate::audio::{AudioEvent, AudioKind};
+use crate::character_status::{CharacterStatus, Skill};
+use crate::effects::{Effect, EffectString};
+use crate::loading::TextureAssets;
+use crate::map::{Field, Map, Position};
+use crate::player::Player;
+use crate::setup::{render_layer, ForState, MapCamera, RenderLayer};
+use crate::AppState;
+
 pub struct EnemiesPlugin;
 
-// This plugin is responsible to controll the game audio
+// This plugin is responsible to control battle objects in battle scene.
 impl Plugin for EnemiesPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<EnemyData>()
@@ -31,12 +33,11 @@ impl Plugin for EnemiesPlugin {
 
 #[derive(Default)]
 pub struct Battle {
-    // pub state: BattleState,
     pub enemy: Enemy,
     pub entity: Option<Entity>,
     pub enemy_status: Option<CharacterStatus>,
     pub ui_status_text: Option<Text>,
-    pub enemy_root_offset: Vec2, // pub ui_entity: Option<Entity>,
+    pub enemy_root_offset: Vec2,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -157,7 +158,16 @@ impl EnemyData {
     }
 }
 
-pub fn setup_battle(
+// 敵のレベル設定
+pub fn level(player_lv: i32, enemy: Enemy) -> i32 {
+    let mut rng = rand::thread_rng();
+    if matches!(enemy, Enemy::Boss) {
+        return 1;
+    }
+    return 1 + rng.gen_range(0..(player_lv / 2).clamp(1, 5));
+}
+
+fn setup_battle(
     mut commands: Commands,
     texture_assets: Res<TextureAssets>,
     mut battle: ResMut<Battle>,
@@ -169,10 +179,6 @@ pub fn setup_battle(
     player_query: Query<&CharacterStatus, With<Player>>,
     mut audio_event_writer: EventWriter<AudioEvent>,
 ) {
-    // 参考
-    // https://github.com/StarArawn/bevy_roguelike_prototype/blob/main/src/game/gameplay/scenes/battle.rs
-
-    // プレイヤーの現在位置を取得
     let (_camera, player_transform, position) = player_camera_query.single().unwrap();
     let map_field = map.position_to_field(position);
     let enemy = enemy_data.field_to_enemy(&map_field);
@@ -184,23 +190,16 @@ pub fn setup_battle(
     let enemy_skill = enemy_data.field_to_enemy_skill(&map_field);
     let enemy_sprite = texture_assets.get_handle_for_enemy(&enemy);
 
-    // 敵の表示ウインドウの中心位置オフセットと表示のスケールを求める
     let window = windows.get_primary_mut().unwrap();
-    //TODO: orthographic_projection_scale の値の影響をここで補正しないように  --> /.3
+    //TODO: orthographic_projection_scale should not be corrected. --> /.3
     let enemy_window_size = Vec2::new(
         window.width() as f32 * 2. / 3. / 3.,
         window.height() / 3. as f32,
     );
     let enemy_root_offset = Vec2::new(enemy_window_size.x - window.width() as f32 / (2. * 3.), 0.);
-    //TODO: 16 をテクスチャから読み込む用に
     let enemy_scale = 1.;
-    // let enemy_scale =
-    //     cmp::min(enemy_window_size.x as i32, enemy_window_size.y as i32) as f32 / 16. * 0.5;
-
-    // 背景と敵を追加
     let battle_entity = commands
         .spawn()
-        // プレイヤーの現在位置を基準として表示する
         .insert(Transform::from_translation(Vec3::new(
             player_transform.translation.x,
             player_transform.translation.y,
@@ -211,12 +210,6 @@ pub fn setup_battle(
             states: vec![AppState::InGameBattle],
         })
         .with_children(|child_builder| {
-            // let mut battle_camera = OrthographicCameraBundle::new_2d();
-            // battle_camera.orthographic_projection.scale = 0.3;
-            // child_builder.spawn_bundle(battle_camera)
-            //     .insert(BattleCamera)
-            //     .insert(RenderLayers::layer(1));
-            // 背景を追加
             child_builder
                 .spawn_bundle(SpriteBundle {
                     sprite: Sprite::new(Vec2::new(window.width(), window.height())),
@@ -272,14 +265,12 @@ pub fn setup_battle(
         })
         .id();
 
-    // battle用のコンポーネントを保持
     battle.entity = Some(battle_entity);
     battle.enemy_root_offset = Vec2::new(
         player_transform.translation.x + enemy_root_offset.x,
         player_transform.translation.y + enemy_root_offset.y,
     );
 
-    // 音楽を再生
     if matches!(enemy, Enemy::Boss) {
         audio_event_writer.send(AudioEvent::Play(AudioKind::BGMBattleLast));
     } else {
@@ -287,8 +278,7 @@ pub fn setup_battle(
     }
 }
 
-// シーンが遷移する前にEffectの表示を削除する
-pub fn clean_up_battle(
+fn clean_up_battle(
     mut commands: Commands,
     mut query: QuerySet<(
         Query<(Entity, &Effect, &TextureAtlasSprite, &Handle<TextureAtlas>)>,

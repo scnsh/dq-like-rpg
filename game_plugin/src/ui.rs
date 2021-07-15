@@ -1,14 +1,15 @@
+use bevy::prelude::*;
+
 use crate::audio::{AudioEvent, AudioKind};
 use crate::character_status::CharacterStatus;
-use crate::enemies::EnemyData;
-use crate::events::{level, GameEvent, RunState};
+use crate::enemies::{level, EnemyData};
+use crate::events::{GameEvent, RunState};
 use crate::inventory::Inventory;
 use crate::loading::FontAssets;
 use crate::map::{Map, Position};
 use crate::player::Player;
 use crate::setup::{ForState, MapCamera};
 use crate::AppState;
-use bevy::prelude::*;
 
 pub struct UiPlugin;
 
@@ -40,16 +41,11 @@ impl Plugin for UiPlugin {
     }
 }
 
-// ステータス画面のテキスト
 pub struct UiStatusPlayerText;
-// 敵画面のテキスト
 pub struct UiStatusEnemyText;
-// インベントリ画面のテキスト
 pub struct UiStatusInventoryText;
-// イベント画面のテキスト
 pub struct UiEventText;
 
-// ステータスウインドウを表示
 fn setup_status_ui(
     mut commands: Commands,
     font_assets: Res<FontAssets>,
@@ -57,8 +53,6 @@ fn setup_status_ui(
     player_query: Query<&CharacterStatus, With<Player>>,
 ) {
     let player_status = player_query.single().unwrap();
-    // ステータスウインドウ(常に表示)
-    // 左上の位置を absolute に指定
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
@@ -69,17 +63,10 @@ fn setup_status_ui(
                     top: Val::Percent(2.),
                     ..Default::default()
                 },
-                // justify_content: JustifyContent::SpaceBetween,
-                // flex_direction: FlexDirection::ColumnReverse,
-                // 枠線
                 border: Rect::all(Val::Px(2.0)),
-                // ウインドウの外側のマージン
                 margin: Rect::all(Val::Percent(3.0)),
-                // // 左下が原点なので、左上に寄せるために設定
-                // align_self: AlignSelf::FlexEnd,
                 ..Default::default()
             },
-            // material: materials.add(Color::NONE.into()),
             material: materials.add(Color::rgb(0.95, 0.95, 0.95).into()),
             ..Default::default()
         })
@@ -87,27 +74,18 @@ fn setup_status_ui(
             states: vec![AppState::InGameExplore, AppState::InGameBattle],
         })
         .with_children(|parent| {
-            // ステータスウインドウ(背景)
             parent
                 .spawn_bundle(NodeBundle {
                     style: Style {
                         size: Size::new(Val::Percent(100.), Val::Percent(100.)),
-                        // 枠線
-                        // border: Rect::all(Val::Px(2.0)),
-                        // // ウインドウの外側のマージン
-                        // margin: Rect::all(Val::Percent(5.0)),
-                        // // 左下が原点なので、左上に寄せるために設定
-                        // align_self: AlignSelf::FlexEnd,
                         ..Default::default()
                     },
-                    // material: materials.add(Color::rgb(0.95, 0.95, 0.95).into()),
                     ..Default::default()
                 })
                 .insert(ForState {
                     states: vec![AppState::InGameExplore, AppState::InGameBattle],
                 })
                 .with_children(|parent| {
-                    // ステータスウインドウ(中身)
                     parent
                         .spawn_bundle(NodeBundle {
                             style: Style {
@@ -124,7 +102,6 @@ fn setup_status_ui(
                             states: vec![AppState::InGameExplore, AppState::InGameBattle],
                         })
                         .with_children(|parent| {
-                            // テキスト
                             parent
                                 .spawn_bundle(TextBundle {
                                     style: Style {
@@ -138,10 +115,7 @@ fn setup_status_ui(
                                             font_size: 30.0,
                                             color: Color::WHITE,
                                         },
-                                        Default::default(), // TextAlignment{
-                                                            //     vertical: VerticalAlign::Center,
-                                                            //     horizontal: HorizontalAlign::Center,
-                                                            // }
+                                        Default::default(),
                                     ),
                                     ..Default::default()
                                 })
@@ -154,7 +128,6 @@ fn setup_status_ui(
         });
 }
 
-// ステータス画面(プレイヤー)を更新する
 fn update_status_ui(
     query: Query<&CharacterStatus, (With<Player>, Changed<CharacterStatus>)>,
     mut status_query: Query<&mut Text, With<UiStatusPlayerText>>,
@@ -173,8 +146,6 @@ fn setup_explore_inventory_ui(
     mut audio_event_writer: EventWriter<AudioEvent>,
 ) {
     let inventory = inventory_query.single().unwrap();
-    // インベントリウインドウ
-    // 左下位置を absolute に指定
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
@@ -185,50 +156,35 @@ fn setup_explore_inventory_ui(
                     bottom: Val::Percent(2.),
                     ..Default::default()
                 },
-                // justify_content: JustifyContent::SpaceBetween,
-                // 枠線はなし
-                // border: Rect::all(Val::Px(2.0)),
-                // ウインドウの外側のマージン
                 margin: Rect::all(Val::Percent(3.0)),
-                // 左下に設定
-                // align_self: AlignSelf::FlexEnd,
                 ..Default::default()
             },
             visible: Visible {
                 is_visible: false,
                 is_transparent: true,
             },
-            // material: materials.add(Color::rgb(0.95, 0.95, 0.95).into()),
             ..Default::default()
         })
         .insert(ForState {
             states: vec![AppState::InGameExplore],
         })
-        // .insert(UiMap)
         .with_children(|parent| {
-            // 左上のウインドウ(中身)
             parent
                 .spawn_bundle(NodeBundle {
                     style: Style {
                         size: Size::new(Val::Percent(100.), Val::Percent(100.)),
-                        // padding: Rect::all(Val::Px(10.)),
-                        // align_items: AlignItems::FlexEnd,
-                        // justify_content: JustifyContent::FlexStart,
                         ..Default::default()
                     },
                     visible: Visible {
                         is_visible: false,
                         is_transparent: true,
                     },
-                    // material: materials.add(Color::BLACK.into()),
                     ..Default::default()
                 })
                 .insert(ForState {
                     states: vec![AppState::InGameExplore],
                 })
-                // .insert(UiMap)
                 .with_children(|parent| {
-                    // 左上のウインドウ(中身)
                     parent
                         .spawn_bundle(NodeBundle {
                             style: Style {
@@ -242,15 +198,12 @@ fn setup_explore_inventory_ui(
                                 is_visible: false,
                                 is_transparent: true,
                             },
-                            // material: materials.add(Color::BLACK.into()),
                             ..Default::default()
                         })
                         .insert(ForState {
                             states: vec![AppState::InGameExplore],
                         })
-                        // .insert(UiMap)
                         .with_children(|parent| {
-                            // テキスト
                             parent
                                 .spawn_bundle(TextBundle {
                                     style: Style {
@@ -269,10 +222,6 @@ fn setup_explore_inventory_ui(
                                             ..Default::default()
                                         },
                                     ),
-                                    // visible: Visible {
-                                    //     is_visible: false,
-                                    //     is_transparent: true,
-                                    // },
                                     ..Default::default()
                                 })
                                 .insert(UiStatusInventoryText)
@@ -293,7 +242,6 @@ fn setup_battle_inventory_ui(
     mut materials: ResMut<Assets<ColorMaterial>>,
     inventory_query: Query<&Inventory, With<Player>>,
 ) {
-    // インベントリUIを表示
     let inventory = inventory_query.single().unwrap();
     commands
         .spawn_bundle(NodeBundle {
@@ -305,13 +253,8 @@ fn setup_battle_inventory_ui(
                     bottom: Val::Percent(2.),
                     ..Default::default()
                 },
-                // justify_content: JustifyContent::SpaceBetween,
-                // 枠線
                 border: Rect::all(Val::Px(2.0)),
-                // ウインドウの外側のマージン
                 margin: Rect::all(Val::Percent(3.0)),
-                // 左下に設定
-                // align_self: AlignSelf::FlexEnd,
                 ..Default::default()
             },
             material: materials.add(Color::rgb(0.95, 0.95, 0.95).into()),
@@ -333,7 +276,6 @@ fn setup_battle_inventory_ui(
                     states: vec![AppState::InGameBattle],
                 })
                 .with_children(|parent| {
-                    // 左上のウインドウ(中身)
                     parent
                         .spawn_bundle(NodeBundle {
                             style: Style {
@@ -344,18 +286,12 @@ fn setup_battle_inventory_ui(
                                 ..Default::default()
                             },
                             material: materials.add(Color::BLACK.into()),
-                            // // 最初は見えない
-                            // visible: Visible {
-                            //     is_visible: false,
-                            //     is_transparent: false,
-                            // },
                             ..Default::default()
                         })
                         .insert(ForState {
                             states: vec![AppState::InGameBattle],
                         })
                         .with_children(|parent| {
-                            // テキスト
                             parent
                                 .spawn_bundle(TextBundle {
                                     style: Style {
@@ -374,11 +310,6 @@ fn setup_battle_inventory_ui(
                                             ..Default::default()
                                         },
                                     ),
-                                    // // 最初は見えない
-                                    // visible: Visible {
-                                    //     is_visible: false,
-                                    //     is_transparent: false,
-                                    // },
                                     ..Default::default()
                                 })
                                 .insert(UiStatusInventoryText)
@@ -399,7 +330,6 @@ fn setup_enemy_status_ui(
     player_query: Query<&CharacterStatus, With<Player>>,
     player_camera_query: Query<(&MapCamera, &Transform, &Position)>,
 ) {
-    // 敵のステータスを表示
     let (_camera, _player_transform, position) = player_camera_query.single().unwrap();
     let field = map.position_to_field(position);
     let player_status = player_query.single().unwrap();
@@ -418,7 +348,6 @@ fn setup_enemy_status_ui(
                     ..Default::default()
                 },
                 border: Rect::all(Val::Px(2.0)),
-                // ウインドウの外側のマージン
                 margin: Rect::all(Val::Px(10.0)),
                 ..Default::default()
             },
@@ -481,7 +410,6 @@ fn setup_enemy_status_ui(
         });
 }
 
-// ステータス画面(エネミー)を更新する
 fn update_enemy_status_ui(
     query: Query<&CharacterStatus, (Without<Player>, Changed<CharacterStatus>)>,
     mut status_query: Query<&mut Text, With<UiStatusEnemyText>>,
@@ -493,7 +421,6 @@ fn update_enemy_status_ui(
     }
 }
 
-// ステータス画面(バトルインベントリ)を更新する
 fn update_battle_inventory_ui(
     query: Query<&Inventory, (With<Player>, Changed<Inventory>)>,
     mut queries: Query<&mut Text, With<UiStatusInventoryText>>,
@@ -555,17 +482,12 @@ fn setup_event_ui(
                 ..Default::default()
             },
             material: materials.add(Color::rgb(0.95, 0.95, 0.95).into()),
-            // visible: Visible {
-            //     is_visible: false,
-            //     is_transparent: false,
-            // },
             ..Default::default()
         })
         .insert(ForState {
             states: vec![AppState::InGameEvent],
         })
         .with_children(|parent| {
-            // ステータスウインドウ(中身)
             parent
                 .spawn_bundle(NodeBundle {
                     style: Style {
@@ -576,17 +498,12 @@ fn setup_event_ui(
                         ..Default::default()
                     },
                     material: materials.add(Color::BLACK.into()),
-                    // visible: Visible {
-                    //     is_visible: false,
-                    //     is_transparent: false,
-                    // },
                     ..Default::default()
                 })
                 .insert(ForState {
                     states: vec![AppState::InGameEvent],
                 })
                 .with_children(|parent| {
-                    // テキスト
                     parent
                         .spawn_bundle(TextBundle {
                             style: Style {
@@ -605,10 +522,6 @@ fn setup_event_ui(
                                     horizontal: HorizontalAlign::Center,
                                 },
                             ),
-                            // visible: Visible {
-                            //     is_visible: false,
-                            //     is_transparent: false,
-                            // },
                             ..Default::default()
                         })
                         .insert(ForState {

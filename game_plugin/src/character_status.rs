@@ -2,7 +2,6 @@ use crate::inventory::{Inventory, Item};
 use core::fmt;
 use std::fmt::{Display, Formatter};
 
-// キャラクターのステータス
 #[derive(Clone)]
 pub struct CharacterStatus {
     pub name: String,
@@ -73,21 +72,19 @@ impl CharacterStatus {
         self.exp = (&self.exp + exp).clamp(1, 999);
         let new_lv = LEVEL_LIST.iter().filter(|&&e| e <= self.exp).count() as i32;
         if self.lv != new_lv {
-            self.level_up(new_lv, inventory); // レベルの更新
-            self.heal2max(); //最大値まで回復
+            self.level_up(new_lv, inventory);
+            self.heal2max();
             return true;
         }
         return false;
     }
     pub fn level_up(&mut self, new_level: i32, inventory: &Inventory) {
-        // 基本値の計算
         self.lv = new_level;
-        self.attack = 10 + (self.lv - 1) * 5; // 攻撃力
-        self.defence = 10 + (self.lv - 1) * 5; // 防御力
-        self.hp_max = 100 + (self.lv - 1) * 25; // 最大HP
-        self.mp_max = 100 + (self.lv - 1) * 25; // 最大MP
+        self.attack = 10 + (self.lv - 1) * 5;
+        self.defence = 10 + (self.lv - 1) * 5;
+        self.hp_max = 100 + (self.lv - 1) * 25;
+        self.mp_max = 100 + (self.lv - 1) * 25;
 
-        // アイテムの効果を適用
         for item in inventory.items.iter() {
             match item {
                 Item::IronBody => self.hp_max = (self.hp_max as f32 * 1.3) as i32,
@@ -101,7 +98,6 @@ impl CharacterStatus {
             }
         }
 
-        // 範囲に収める
         self.attack = self.attack.clamp(1, 999);
         self.defence = self.defence.clamp(1, 999);
         self.hp_max = self.hp_max.clamp(1, 999);

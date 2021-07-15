@@ -6,8 +6,7 @@ use bevy::prelude::*;
 
 pub struct ExploreActionsPlugin;
 
-// This plugin listens for keyboard input and converts the input into Actions
-// Actions can then be used as a resource in other systems to act on the player input.
+// This plugin execute actions from user input on Explore scene.
 impl Plugin for ExploreActionsPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system_set(

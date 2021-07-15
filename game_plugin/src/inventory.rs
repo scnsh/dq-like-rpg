@@ -5,18 +5,10 @@ use std::fmt::Display;
 
 pub struct InventoryPlugin;
 
-// This plugin is responsible to controll the game audio
+// This plugin is responsible to control the player inventory
 impl Plugin for InventoryPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<Inventory>();
-        // .add_system_set(
-        //     SystemSet::on_enter(AppState::InGameBattle)
-        //         .with_system(effects_event.system())
-        //         .with_system(handle_effect.system()),
-        // )
-        // .add_system_set(
-        //     SystemSet::on_exit(AppState::InGameBattle).with_system(clean_up_effects.system()),
-        // );
     }
 }
 
@@ -33,9 +25,7 @@ pub enum Item {
     WisdomRing,
     FairyShield,
 }
-// impl Default for Item {
-//     fn default() -> Self { Item::Sword }
-// }
+
 impl Display for Item {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "{:?}", self)
@@ -73,7 +63,6 @@ pub fn generate_items() -> Vec<Item> {
     ]
 }
 
-// 持ち物
 pub struct Inventory {
     pub items: Vec<Item>,
     pub skills: Vec<Skill>,
@@ -113,12 +102,9 @@ impl Inventory {
             }
         }
         ret
-        // formart!("{0}", self.items.iter().map(|s| format!("> {}", s)).collect::<Vec<_>>().join("\n"))
     }
     pub fn add_item(&mut self, item: Item) {
-        // アイテムをインベントリに追加
         self.items.push(item);
-        // スキルアイテムはスキルリストにも追加
         if let Some(skill) = item.can_use() {
             self.skills.push(skill);
         }

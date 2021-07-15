@@ -11,7 +11,7 @@ use rand::Rng;
 
 pub struct EffectsPlugin;
 
-// This plugin is responsible to controll the game audio
+// This plugin is responsible to control the game effects
 impl Plugin for EffectsPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_event::<EffectEvent>()
@@ -77,9 +77,6 @@ fn effects_event(
 ) {
     let window = windows.get_primary_mut().unwrap();
     for event in event_reader.iter() {
-        // let texture_atlas =
-        //     TextureAtlas::from_grid(texture_handle.clone(), Vec2::new(120., 120.), *columns, 1);
-        // let texture_atlas_handle = texture_atlases.add(texture_atlas);
         let texture_atlas_handle = texture_atlas.get_handle_for_effect(&event.kind);
         let effect_length = texture_atlas.get_length_for_effect(&event.kind);
         commands
@@ -103,7 +100,6 @@ fn effects_event(
                 states: vec![AppState::InGameBattle],
             })
             .with_children(|child_builder| {
-                // 敵の攻撃の場合はダメージ表示用のテクスチャを表示する(背景を赤くする)
                 if !&event.is_player_attack {
                     child_builder
                         .spawn_bundle(SpriteBundle {
@@ -148,7 +144,6 @@ fn effects_event(
                 states: vec![AppState::InGameBattle],
             })
             .with_children(|child_builder| {
-                // テキスト
                 child_builder.spawn_bundle(TextBundle {
                     style: Style {
                         margin: Rect::all(Val::Px(5.)),
@@ -170,7 +165,6 @@ fn effects_event(
                     ..Default::default()
                 });
             });
-        // Player攻撃時のみサウンドを再生、攻撃と回復で音の種類も分ける
         if matches!(&event.is_player_attack, true) {
             if matches!(&event.kind, EffectKind::Heal) {
                 audio_event_writer.send(AudioEvent::Play(AudioKind::SEHeal));
@@ -203,21 +197,18 @@ fn handle_effect(
         for mut player in player_query.iter_mut() {
             for (entity, mut effect, mut sprite, texture_atlas_handle) in query.q0_mut().iter_mut()
             {
-                // Animationの更新
                 effect.update_timer.tick(elapsed);
                 if effect.update_timer.finished() {
                     let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
                     sprite.index =
                         ((sprite.index as usize + 1) % texture_atlas.textures.len()) as u32;
                 }
-                // Enemyを振動させる
                 enemy_transform.translation.x = rng.gen_range(-1.0..1.0);
                 enemy_transform.translation.y = rng.gen_range(-1.0..1.0);
 
                 effect.finish_timer.tick(elapsed);
                 if effect.finish_timer.finished() {
                     commands.entity(entity).despawn_recursive();
-                    // プレイヤーの状態を更新する
                     match player.battle_state {
                         PlayerBattleState::Attack => {
                             player.battle_state = PlayerBattleState::Defense
@@ -233,7 +224,6 @@ fn handle_effect(
                 } else {
                 }
             }
-            // 文字の表示はエフェクトとともに削除
             for (entity, mut effect, _string) in query.q1_mut().iter_mut() {
                 effect.finish_timer.tick(elapsed);
                 if effect.finish_timer.finished() {
@@ -244,7 +234,6 @@ fn handle_effect(
     }
 }
 
-// シーンが遷移する前にEffectの表示を削除する
 fn clean_up_effects(
     mut commands: Commands,
     mut query: QuerySet<(

@@ -15,7 +15,6 @@ use rand::Rng;
 pub struct PlayerPlugin;
 
 /// This plugin handles player related stuff like movement
-/// Player logic is only active during the State `GameState::Playing`
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system_set(
@@ -32,18 +31,16 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-// システムラベル(SystemLabel)
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum PlayerMovement {
     Movement,
 }
 
-// バトルの状態
 #[derive(Debug)]
 pub enum PlayerBattleState {
-    Select,  // プレイヤーの入力待ち
-    Attack,  // プレイヤー攻撃中
-    Defense, // 相手の攻撃中
+    Select,
+    Attack,
+    Defense,
 }
 
 pub struct Player {
@@ -58,26 +55,17 @@ fn spawn_player(
     mut camera_query: Query<(Entity, &mut Transform, &mut Position, &mut MapCamera)>,
     mut app_state: ResMut<State<AppState>>,
 ) {
-    // Playerを削除する(2日目以降)
+    // Delete player for second play
     for entity in player.iter() {
         commands.entity(entity).despawn_recursive();
     }
 
     for (camera, mut transform, mut position, mut map_camera) in camera_query.iter_mut() {
-        // カメラ位置をリセットする(GameOver後のリスタートも想定する)
         *transform =
             map.position_to_translation(&Position { x: 0., y: 0. }, transform.translation.z);
         *position = Position { x: 0., y: 0. };
         *map_camera = MapCamera::default();
 
-        // 主人公を追加する
-        // let you_sprite = asset_server.load("textures/player/player.png");
-        // let you_sprite = asset_handles.player.clone();
-        // let texture_atlas = TextureAtlas::from_grid(you_sprite, Vec2::new(14., 20.), 2, 1);
-        // let texture_atlas_handle = texture_atlas.texture_atlases.add(texture_atlas);
-
-        // let position = Position { x: 0, y: 0 };
-        // let transform = position_to_translation(&map, &position, render_layer(RenderLayer::Player) as f32);
         let player = commands
             .spawn_bundle(SpriteSheetBundle {
                 texture_atlas: texture_atlas.player.clone(),
@@ -100,19 +88,16 @@ fn spawn_player(
         commands.entity(camera).push_children(&[player]);
     }
 
-    // 次の画面に遷移する
     app_state.set(AppState::InGameExplore).unwrap();
 }
 
-pub fn animate_player(
+fn animate_player(
     time: Res<Time>,
     texture_atlases: Res<Assets<TextureAtlas>>,
     mut query: Query<(&mut Timer, &mut TextureAtlasSprite, &Handle<TextureAtlas>)>,
 ) {
     for (mut timer, mut sprite, texture_atlas_handle) in query.iter_mut() {
-        // 時間を進ませる
         timer.tick(time.delta());
-        // 時間が経過すれば、アトラスから次のIndexを設定する
         if timer.finished() {
             let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
             sprite.index = ((sprite.index as usize + 1) % texture_atlas.textures.len()) as u32;
@@ -132,23 +117,19 @@ fn move_player(
     {
         let velocity = time.delta_seconds() * 3.;
         if map_camera.destination == *position {
-            // 移動状態から停止状態に遷移
             if matches!(map_camera.state, MapCameraState::Moving) {
                 map_camera.state = MapCameraState::Stop;
 
                 let field = map.position_to_field(&position);
                 match field {
                     Field::Town { item, visited } => {
-                        // 街に着いた
                         events_writer.send(GameEvent::TownArrived(item, visited))
                     }
                     Field::Castle => {
-                        // ボス戦闘
                         let enemy = enemy_data.field_to_enemy(&map.position_to_field(&position));
                         events_writer.send(GameEvent::EnemyEncountered(enemy))
                     }
                     Field::Grass | Field::Forest | Field::Mountain => {
-                        // ランダム戦闘
                         let field = map.position_to_field(&position);
                         let mut rng = rand::thread_rng();
                         if rng.gen_bool((1. / enemy_data.field_to_rate(&field) as f32) as f64) {
@@ -160,43 +141,12 @@ fn move_player(
                 }
             }
         } else {
-            // 停止状態から移動状態に遷移
             if matches!(map_camera.state, MapCameraState::Stop) {
                 map_camera.state = MapCameraState::Moving;
             }
-            // 位置を更新する
             let move_direction = map_camera.direction;
-            // mini map 向け
+            // for mini map
             let mut prev_position = position.clone();
-            // if let Some(mut tilemap) = mini_tilemap_query.iter_mut().next() {
-            //     let mut prev_position = position.clone();
-            //     let width = MAP_SIZE[0] as f32;
-            //     let height = MAP_SIZE[1] as f32;
-            //     let left = &width / 2. - 1.;
-            //     let right = -&width / 2.;
-            //     let top = &height / 2. - 1.;
-            //     let bottom = -&height / 2.;
-            //     if position.x < right {
-            //         prev_position.x = left
-            //     }
-            //     if position.x > left {
-            //         prev_position.x = right
-            //     }
-            //     if position.y > top {
-            //         prev_position.y = bottom
-            //     }
-            //     if position.y < bottom {
-            //         prev_position.y = top
-            //     }
-            //     // 移動元を戻す(端から端へワープする時以外、この場合は元の位置にいるわけでないため)
-            //     let field = position_to_field(&map, &prev_position);
-            //     tilemap
-            //         .insert_tile(Tile {
-            //             point: (prev_position.x as i32, prev_position.y as i32),
-            //             sprite_index: field.sprite_index(),
-            //             ..Default::default()
-            //         })
-            //         .unwrap();
             match move_direction {
                 Some(Action::Left) => {
                     position.x = get_new_position(position.x, -velocity, map_camera.destination.x);
@@ -213,22 +163,10 @@ fn move_player(
                 _ => {}
             }
             *transform = map.position_to_translation(&position, transform.translation.z);
-            // info!(
-            //     "{0:?}, {1:?}, {2:?}",
-            //     position, map_camera.destination, prev_position
-            // );
 
             if let Some(mut tilemap) = mini_tilemap_query.iter_mut().next() {
                 update_mini_tilemap(&mut tilemap, &mut prev_position, &position, map);
             }
-            // // 移動先を更新する
-            // tilemap
-            //     .insert_tile(Tile {
-            //         point: (position.x as i32, position.y as i32),
-            //         sprite_index: MapField::Player.sprite_index(),
-            //         ..Default::default()
-            //     })
-            //     .unwrap();
         }
     }
 }
@@ -248,7 +186,6 @@ fn update_mini_tilemap(
 ) {
     let width = MAP_SIZE[0] as f32;
     let height = MAP_SIZE[1] as f32;
-    // マップの外側から移動した場合はワープ元の位置を更新する
     if old_position.x < -&width / 2. {
         old_position.x = &width / 2. - 1.
     }
@@ -262,7 +199,6 @@ fn update_mini_tilemap(
         old_position.y = &height / 2. - 1.
     }
     let field = map.position_to_field(&old_position);
-    // 移動元を更新
     mini_tilemap
         .insert_tile(Tile {
             point: (old_position.x as i32, old_position.y as i32),
@@ -271,7 +207,6 @@ fn update_mini_tilemap(
         })
         .unwrap();
 
-    // 移動先を更新する
     mini_tilemap
         .insert_tile(Tile {
             point: (new_position.x as i32, new_position.y as i32),
@@ -282,7 +217,6 @@ fn update_mini_tilemap(
 }
 
 fn clean_up_player(mut commands: Commands, mut player_query: Query<(&mut Player, Entity)>) {
-    // Playerを削除する
     for (_player, entity) in player_query.iter_mut() {
         commands.entity(entity).despawn_recursive();
     }

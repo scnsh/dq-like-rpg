@@ -10,6 +10,7 @@ use std::collections::{HashMap, HashSet};
 
 pub struct MapPlugin;
 
+// This plugin is responsible to generate and update map
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut AppBuilder) {
         let map = Map::generate_map();
@@ -48,7 +49,6 @@ pub struct Position {
     pub y: f32,
 }
 
-// マップフィールドの属性
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub enum Field {
     Grass,
@@ -130,7 +130,6 @@ impl Map {
     }
 
     pub fn generate_map() -> Self {
-        // chunkの縦・横のサイズを取得
         let width = MAP_SIZE[0] as i32;
         let height = MAP_SIZE[1] as i32;
         let mut map = Map {
@@ -145,28 +144,21 @@ impl Map {
             mini_tiles: Vec::new(),
         };
 
-        // ワールド全体をgrassで埋める
         for y in 0..height {
             for x in 0..width {
                 // -chunk_width/2 < x < chunk_width/2,  -chunk_height/2 < y < chunk_height/2
                 let pos = (x - width / 2, y - height / 2); // -chunk_height/2 < y < chunk_height/2
-                                                           // デフォルトの tile set の z-order は 0
-                                                           // // 小さい方が他よりも後ろにレンダリングされ, 0 は 最後尾 で 背景に使うのが最適
                 map.fields.insert(pos, Field::Grass);
             }
         }
 
-        // 山・森・水を配置する
         let mut rng = rand::thread_rng();
         for y in 0..height {
             for x in 0..width {
                 let pos = (x - width / 2, y - height / 2); // -chunk_height/2 < y < chunk_height/2
-                                                           // 1/60 の確率で山生成開始
                 if rng.gen_bool(1. / 60.) {
-                    // 山の散布回数
                     let max = rng.gen_range(10..60);
                     for _i in 0..max {
-                        // ランダム移動で山を生成
                         let pos = (
                             (pos.0 + rng.gen_range(-3..4)).clamp(-&width / 2, &width / 2 - 1),
                             (pos.1 + rng.gen_range(-3..4)).clamp(-&height / 2, &height / 2 - 1),
@@ -174,43 +166,35 @@ impl Map {
                         map.fields.insert(pos, Field::Mountain);
                     }
                 }
-                // 1/12 で水
-                // マップ端には作らないように(ワープした先が水にならないように)
                 if 0 < y && y < height - 1 && 0 < x && x < width - 1 {
                     if rng.gen_bool(1. / 12.) {
                         map.fields.insert(pos, Field::Water);
                     }
                 }
-                // 1/6 で森
                 if rng.gen_bool(1. / 6.) {
                     map.fields.insert(pos, Field::Forest);
                 }
             }
         }
 
-        // ゲーム開始位置付近は平地にする
         for y in -1..2 {
             for x in -1..2 {
-                // let pos = (x, y); // -chunk_height/2 < y < chunk_height/2
                 map.fields.insert((x, y), Field::Grass);
             }
         }
 
-        // 敵城の生成 マップ周縁(0.8 ~ 1.0、0~0.2の比率)に生成
         let castle_x =
             (width as f32 * rng_multi_range((0.05, 0.2), (0.8, 0.95))) as i32 - width / 2;
         let castle_y =
             (height as f32 * rng_multi_range((0.05, 0.2), (0.8, 0.95))) as i32 - height / 2;
         map.fields.insert((castle_x, castle_y), Field::Castle);
 
-        // 街の生成 開始位置を避けて (0.55~1.0, 0~0.45の比率)に生成
         for item in generate_items() {
             let town_x =
                 (width as f32 * rng_multi_range((0.05, 0.45), (0.55, 0.95))) as i32 - width / 2;
             let town_y =
                 (height as f32 * rng_multi_range((0.05, 0.45), (0.55, 0.95))) as i32 - height / 2;
             match map.fields[&(town_x, town_y)] {
-                // 街や城と重複した場合は追加しない
                 Field::Town {
                     item: _,
                     visited: _,
@@ -228,7 +212,6 @@ impl Map {
         }
 
         for (pos, field) in map.fields.iter_mut() {
-            // マップ外にも描画する
             for x in 0..CHUNK_SIZE[0] as i32 {
                 for y in 0..CHUNK_SIZE[1] as i32 {
                     let y = y - CHUNK_SIZE[1] as i32 / 2;
@@ -246,7 +229,6 @@ impl Map {
             }
             let mini_tile = Tile {
                 point: pos.clone(),
-                // 初期位置はプレイヤーの色で塗りつぶす
                 sprite_index: if pos.0 == 0 && pos.1 == 0 {
                     Field::Player.sprite_index()
                 } else {
@@ -255,11 +237,9 @@ impl Map {
                 ..Default::default()
             };
             map.mini_tiles.push(mini_tile.clone());
-            // 水は通れない設定
             if matches!(field, Field::Water) {
                 map.collisions.insert(pos.clone());
             }
-            // 町と城はminimap上で点滅する
             match field {
                 Field::Town {
                     item: _,
@@ -291,31 +271,18 @@ fn regenerate_map(
     map.tiles = new_map.tiles.clone();
     map.mini_tiles = new_map.mini_tiles.clone();
 
-    // Tilemapを削除する(2回目以降)
     for entity in tilemap.iter() {
         commands.entity(entity).despawn_recursive();
     }
 }
 
-pub fn spawn_map(
-    mut commands: Commands,
-    map: Res<Map>,
-    texture_atlas: Res<TileMapAtlas>,
-    // asset_handles: Res<AssetHandles>, // スプライト全体のハンドルとロード状態を管理
-) {
-    // テクスチャは1つと仮定
-    // let sprite_handle = asset_handles.tilemap.clone();
-    //
-    // let texture_atlas = TextureAtlas::from_grid(sprite_handle, Vec2::new(16., 16.), 6, 1);
-    // let atlas_handle = texture_atlases.add(texture_atlas);
-
-    // タイルマップの構成を決定
+fn spawn_map(mut commands: Commands, map: Res<Map>, texture_atlas: Res<TileMapAtlas>) {
     let tilemap = Tilemap::builder()
-        .auto_chunk() // spawnする際に新しいchunkとして生成する
-        .topology(GridTopology::Square) // tilemap の構成
-        .dimensions(CHUNK_SIZE[0], CHUNK_SIZE[1]) // tilemap の数
-        .chunk_dimensions(MAP_SIZE[0], MAP_SIZE[1], 1) // chunk_mapの数
-        .texture_dimensions(MAP_TEXTURE_SIZE[0], MAP_TEXTURE_SIZE[1]) // タイルのサイズ(px)
+        .auto_chunk()
+        .topology(GridTopology::Square)
+        .dimensions(CHUNK_SIZE[0], CHUNK_SIZE[1])
+        .chunk_dimensions(MAP_SIZE[0], MAP_SIZE[1], 1)
+        .texture_dimensions(MAP_TEXTURE_SIZE[0], MAP_TEXTURE_SIZE[1])
         .add_layer(
             TilemapLayer {
                 kind: LayerKind::Dense,
@@ -334,7 +301,6 @@ pub fn spawn_map(
         .finish()
         .unwrap();
 
-    // tilemap コンポーネントを含むエンティティを作成
     let mut tilemap_components = TilemapBundle {
         tilemap,
         visible: Visible {
@@ -345,7 +311,6 @@ pub fn spawn_map(
         global_transform: Default::default(),
     };
 
-    // TileMapにTileを追加
     tilemap_components
         .tilemap
         .insert_tiles(map.tiles.clone())
@@ -365,19 +330,14 @@ pub fn spawn_map(
     commands.spawn_bundle(tilemap_components).insert(TileMap);
 }
 
-pub fn spawn_mini_map(
+fn spawn_mini_map(
     mut commands: Commands,
     map: Res<Map>,
     texture_atlas: Res<TileMapAtlas>,
     camera_query: Query<(Entity, &Transform, &MapCamera)>,
 ) {
-    // minimapをワールドに追加
-    // let sprite_handle = asset_handles.mini_tilemap.clone();
-    // let texture_atlas = TextureAtlas::from_grid(sprite_handle, Vec2::new(1., 1.), 8, 1);
-    // let atlas_handle = texture_atlases.add(texture_atlas);
-
     let mini_tilemap = Tilemap::builder()
-        .auto_chunk() // spawnする際に新しいchunkとして生成する
+        .auto_chunk()
         .topology(GridTopology::Square)
         .dimensions(1, 1)
         .chunk_dimensions(MAP_SIZE[0], MAP_SIZE[1], 1)
@@ -394,14 +354,12 @@ pub fn spawn_mini_map(
         .unwrap();
 
     let (camera, transform, _map_camera) = camera_query.single().unwrap();
-    // tilemap コンポーネントを含むエンティティを作成
     let mut mini_tilemap_components = TilemapBundle {
         tilemap: mini_tilemap,
         visible: Visible {
             is_visible: true,
             is_transparent: true,
         },
-        // カメラからの相対位置にminimapを表示する
         transform: Transform::from_xyz(
             MAP_SIZE[0] as f32 * 1.5,
             MAP_SIZE[1] as f32 * 1.5,
@@ -410,12 +368,10 @@ pub fn spawn_mini_map(
         global_transform: Default::default(),
     };
 
-    // TileMapにTileを追加
     mini_tilemap_components
         .tilemap
         .insert_tiles(map.mini_tiles.clone())
         .unwrap();
-    // ワールドに追加
     mini_tilemap_components.tilemap.spawn_chunk((0, 0)).unwrap();
 
     let minimap = commands
@@ -424,19 +380,16 @@ pub fn spawn_mini_map(
         .insert(MiniMap)
         .insert(Timer::from_seconds(1.0, true))
         .id();
-    // 相対位置にするためにカメラの子エンティティとする
     commands.entity(camera).push_children(&[minimap]);
 }
 
-pub fn animate_mini_map(
+fn animate_mini_map(
     time: Res<Time>,
     mut query: Query<(&mut Timer, &mut Tilemap), With<MiniMap>>,
     mut map: ResMut<Map>,
 ) {
     for (mut timer, mut tilemap) in query.iter_mut() {
-        // 時間を進ませる
         timer.tick(time.delta());
-        // 時間が経過すれば、アトラスから次のIndexを設定する
         if timer.finished() {
             for blink in &map.blinks_on_mini_tiles {
                 let mut map_field = Field::Blink;
@@ -469,7 +422,6 @@ fn rng_multi_range(range1: (f32, f32), range2: (f32, f32)) -> f32 {
 }
 
 fn clean_up_all_tilemap(mut commands: Commands, mut tilemap: Query<(Entity, &TileMap)>) {
-    // Tilemapを削除する
     for (entity, _tilemap) in tilemap.iter_mut() {
         commands.entity(entity).despawn_recursive();
     }

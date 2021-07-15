@@ -8,8 +8,7 @@ use bevy::prelude::*;
 
 pub struct BattleActionsPlugin;
 
-// This plugin listens for keyboard input and converts the input into Actions
-// Actions can then be used as a resource in other systems to act on the player input.
+// This plugin execute actions from user input on Battle scene.
 impl Plugin for BattleActionsPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<Battle>().add_system_set(

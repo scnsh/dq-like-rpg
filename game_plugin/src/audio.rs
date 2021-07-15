@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 pub struct InternalAudioPlugin;
 
-// This plugin is responsible to controll the game audio
+// This plugin is responsible to control the game audio
 impl Plugin for InternalAudioPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(AudioPlugin)
@@ -192,24 +192,8 @@ fn control_audio(
                     }
                 }
             }
-            // AudioEvent::Pause(kind) => {
-            //     let (channel, channel_audio_state) = audio_state.get_channel(kind).unwrap();
-            //     // 既に停止していればSkip
-            //     if channel_audio_state.stopped {
-            //         continue;
-            //     }
-            //     if channel_audio_state.paused {
-            //         // pauseしていればplay
-            //         audio.resume_channel(channel);
-            //     } else {
-            //         // playしていればpause
-            //         audio.pause_channel(channel);
-            //     }
-            //     channel_audio_state.paused = !channel_audio_state.paused;
-            // }
             AudioEvent::Stop(kind) => {
                 let (channel, channel_audio_state) = audio_state.get_channel(kind).unwrap();
-                // 既に停止していればSkip
                 if channel_audio_state.stopped {
                     continue;
                 }

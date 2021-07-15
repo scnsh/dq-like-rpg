@@ -155,16 +155,11 @@ fn explore_debug_input(
     if keyboard_input.just_pressed(KeyCode::B) {
         if let Some((_map_camera, _transform, position)) = player_camera_query.iter_mut().next() {
             let enemy = enemy_data.field_to_enemy(&map.position_to_field(&position));
-            // battle.enemy = enemy.clone();
-            // state.set(GameState::Battle).unwrap()
             events.send(GameEvent::EnemyEncountered(enemy.clone()));
-
-            // keyboard_input.reset(KeyCode::B);
         }
     }
     if keyboard_input.just_pressed(KeyCode::T) {
         events.send(GameEvent::TownArrived(Item::SpellFire(1), false));
-        // keyboard_input.reset(KeyCode::T);
     }
 }
 

@@ -46,17 +46,17 @@ pub struct FontAssets {
 
 #[derive(AssetCollection)]
 pub struct AudioAssets {
-    #[asset(path = "audio/bgm/bgm_maoudamashii_8bit01.ogg")]
+    #[asset(path = "audio/bgm/bgm_maoudamashii_8bit02.ogg")]
     pub bgm_map: Handle<AudioSource>,
-    #[asset(path = "audio/bgm/bgm_maoudamashii_8bit18.ogg")]
+    #[asset(path = "audio/bgm/bgm_maoudamashii_8bit07.ogg")]
     pub bgm_battle: Handle<AudioSource>,
-    #[asset(path = "audio/bgm/bgm_maoudamashii_8bit20.ogg")]
+    #[asset(path = "audio/bgm/bgm_maoudamashii_8bit03.ogg")]
     pub bgm_lose: Handle<AudioSource>,
     #[asset(path = "audio/bgm/bgm_maoudamashii_8bit24.ogg")]
     pub bgm_win: Handle<AudioSource>,
-    #[asset(path = "audio/bgm/bgm_maoudamashii_8bit25.ogg")]
+    #[asset(path = "audio/bgm/bgm_maoudamashii_8bit09.ogg")]
     pub bgm_battle_last: Handle<AudioSource>,
-    #[asset(path = "audio/se/se_maoudamashii_retro03.ogg")]
+    #[asset(path = "audio/se/se_maoudamashii_battle01.ogg")]
     pub attack: Handle<AudioSource>,
     #[asset(path = "audio/se/se_maoudamashii_retro08.ogg")]
     pub heal: Handle<AudioSource>,

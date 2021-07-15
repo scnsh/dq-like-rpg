@@ -1,10 +1,19 @@
+#[cfg(debug_assertions)]
 use crate::character_status::Skill;
+#[cfg(debug_assertions)]
 use crate::effects::{skill_to_effect, EffectEvent};
+#[cfg(debug_assertions)]
 use crate::enemies::EnemyData;
+#[cfg(debug_assertions)]
 use crate::events::GameEvent;
+#[cfg(debug_assertions)]
 use crate::inventory::{Inventory, Item};
+#[cfg(debug_assertions)]
 use crate::map::{Map, Position};
-use crate::player::{Player, PlayerMovement};
+#[cfg(debug_assertions)]
+use crate::player::Player;
+use crate::player::PlayerMovement;
+#[cfg(debug_assertions)]
 use crate::setup::MapCamera;
 use crate::AppState;
 use bevy::prelude::*;
@@ -23,20 +32,29 @@ impl Plugin for ActionsPlugin {
                 SystemSet::on_update(AppState::InGameExplore)
                     .with_system(set_movement_actions.system())
                     .label("movement")
-                    .before(PlayerMovement::Movement)
-                    .with_system(explore_debug_input.system()),
+                    .before(PlayerMovement::Movement),
             )
             .add_system_set(
                 SystemSet::on_update(AppState::InGameBattle)
                     .with_system(set_battle_actions.system())
-                    .label("battle")
-                    .with_system(battle_debug_input.system()),
+                    .label("battle"),
             )
             .add_system_set(
                 SystemSet::on_update(AppState::InGameEvent)
                     .with_system(set_event_actions.system())
                     .label("event"),
             );
+        #[cfg(debug_assertions)]
+        {
+            app.add_system_set(
+                SystemSet::on_update(AppState::InGameExplore)
+                    .with_system(explore_debug_input.system()),
+            )
+            .add_system_set(
+                SystemSet::on_update(AppState::InGameBattle)
+                    .with_system(battle_debug_input.system()),
+            );
+        }
     }
 }
 
@@ -144,6 +162,7 @@ fn set_movement_actions(mut actions: ResMut<PlayerActions>, keyboard_input: Res<
     }
 }
 
+#[cfg(debug_assertions)]
 fn explore_debug_input(
     keyboard_input: ResMut<Input<KeyCode>>,
     mut events: EventWriter<GameEvent>,
@@ -216,6 +235,7 @@ fn set_battle_actions(mut actions: ResMut<PlayerActions>, keyboard_input: Res<In
     }
 }
 
+#[cfg(debug_assertions)]
 fn battle_debug_input(
     mut keyboard_input: ResMut<Input<KeyCode>>,
     mut state: ResMut<State<AppState>>,
